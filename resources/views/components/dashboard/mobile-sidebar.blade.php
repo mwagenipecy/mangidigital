@@ -38,7 +38,7 @@
             <span class="dash-sb-label">Payments</span>
             <span class="dash-sb-badge warn">5</span>
         </a>
-        <a href="#" class="dash-sb-item" onclick="window.dashCloseMobileSidebar()">
+        <a href="{{ route('invoices.index') }}" class="dash-sb-item {{ request()->routeIs('invoices.*') ? 'active' : '' }}" wire:navigate onclick="window.dashCloseMobileSidebar()">
             <span class="dash-sb-icon"><flux:icon.document-text class="size-5" /></span>
             <span class="dash-sb-label">Invoices</span>
         </a>
