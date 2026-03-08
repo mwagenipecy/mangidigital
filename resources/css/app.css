@@ -11,6 +11,15 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
+    /* Mangi Digital brand (landing) */
+    --color-brand: #2AA5BD;
+    --color-brand-dk: #1d8aa0;
+    --color-brand-lgt: #3fc0d8;
+    --color-ink: #0b1f26;
+    --color-muted: #6a8e99;
+    --color-bg-landing: #f5fbfc;
+    --color-bg-landing-2: #eaf6f9;
+
     --color-zinc-50: #fafafa;
     --color-zinc-100: #f5f5f5;
     --color-zinc-200: #e5e5e5;

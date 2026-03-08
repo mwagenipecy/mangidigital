@@ -5,10 +5,11 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('Profile settings')] class extends Component {
+new #[Layout('layouts.dashboard-livewire', ['title' => 'Profile settings'])] #[Title('Profile settings')] class extends Component {
     use ProfileValidationRules;
 
     public string $name = '';
@@ -75,52 +76,45 @@ new #[Title('Profile settings')] class extends Component {
     }
 }; ?>
 
-<section class="w-full">
-    @include('partials.settings-heading')
+<div class="dash-page-header">
+    <div>
+        <h1 class="dash-page-title">{{ __('Profile') }}</h1>
+        <p class="dash-page-subtitle">{{ __('Update your name and email address') }}</p>
+    </div>
+</div>
 
-    <flux:heading class="sr-only">{{ __('Profile settings') }}</flux:heading>
-
-    <x-pages::settings.layout :heading="__('Profile')" :subheading="__('Update your name and email address')">
-        <form wire:submit="updateProfileInformation" class="my-6 w-full space-y-6">
-            <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
-
-            <div>
-                <flux:input wire:model="email" :label="__('Email')" type="email" required autocomplete="email" />
-
-                @if ($this->hasUnverifiedEmail)
-                    <div>
-                        <flux:text class="mt-4">
-                            {{ __('Your email address is unverified.') }}
-
-                            <flux:link class="text-sm cursor-pointer" wire:click.prevent="resendVerificationNotification">
-                                {{ __('Click here to re-send the verification email.') }}
-                            </flux:link>
-                        </flux:text>
-
-                        @if (session('status') === 'verification-link-sent')
-                            <flux:text class="mt-2 font-medium !dark:text-green-400 !text-green-600">
-                                {{ __('A new verification link has been sent to your email address.') }}
-                            </flux:text>
-                        @endif
-                    </div>
+<div class="dash-card" style="max-width: 32rem;">
+    <form wire:submit="updateProfileInformation">
+        <div style="margin-bottom: 16px;">
+            <label for="profile-name" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">{{ __('Name') }}</label>
+            <input type="text" id="profile-name" wire:model="name" required autofocus autocomplete="name" style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
+            @error('name') <p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p> @enderror
+        </div>
+        <div style="margin-bottom: 16px;">
+            <label for="profile-email" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">{{ __('Email') }}</label>
+            <input type="email" id="profile-email" wire:model="email" required autocomplete="email" style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
+            @error('email') <p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p> @enderror
+            @if ($this->hasUnverifiedEmail)
+                <p style="margin-top:8px;font-size:.85rem;color:var(--dash-muted);">
+                    {{ __('Your email address is unverified.') }}
+                    <button type="button" wire:click.prevent="resendVerificationNotification" style="background:none;border:none;padding:0;color:var(--dash-brand);cursor:pointer;text-decoration:underline;font-size:inherit;">
+                        {{ __('Click here to re-send the verification email.') }}
+                    </button>
+                </p>
+                @if (session('status') === 'verification-link-sent')
+                    <p style="margin-top:6px;font-size:.85rem;font-weight:600;color:var(--dash-ok);">{{ __('A new verification link has been sent to your email address.') }}</p>
                 @endif
-            </div>
+            @endif
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <button type="submit" class="dash-btn dash-btn-brand" data-test="update-profile-button">{{ __('Save') }}</button>
+            <x-action-message on="profile-updated" style="font-size:.9rem;color:var(--dash-ok);">{{ __('Saved.') }}</x-action-message>
+        </div>
+    </form>
+</div>
 
-            <div class="flex items-center gap-4">
-                <div class="flex items-center justify-end">
-                    <flux:button variant="primary" type="submit" class="w-full" data-test="update-profile-button">
-                        {{ __('Save') }}
-                    </flux:button>
-                </div>
-
-                <x-action-message class="me-3" on="profile-updated">
-                    {{ __('Saved.') }}
-                </x-action-message>
-            </div>
-        </form>
-
-        @if ($this->showDeleteUser)
-            <livewire:pages::settings.delete-user-form />
-        @endif
-    </x-pages::settings.layout>
-</section>
+@if ($this->showDeleteUser)
+    <div style="max-width: 32rem; margin-top: 24px;">
+        <livewire:pages::settings.delete-user-form />
+    </div>
+@endif
