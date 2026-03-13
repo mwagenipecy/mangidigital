@@ -23,7 +23,9 @@ Route::get('/', [LandingController::class, 'index'])->name('home');
 Route::get('/terms', fn () => view('pages.legal.terms'))->name('terms');
 Route::get('/privacy', fn () => view('pages.legal.privacy'))->name('privacy');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->get('pending-approval', fn () => view('pages.auth.pending-approval'))->name('pending-approval');
+
+Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('settings/business', [SettingsController::class, 'business'])->name('settings.business');
