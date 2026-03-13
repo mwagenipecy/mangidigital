@@ -22,82 +22,128 @@
     </div>
 @endif
 
-<div class="dash-card">
-    <div class="dash-card-header">
-        <div>
-            <div class="dash-card-title">{{ __('New invoice') }}</div>
-            <div class="dash-card-subtitle">{{ __('Client optional — fill origin and destination for PDF') }}</div>
+<form action="{{ route('invoices.store') }}" method="POST">
+    @csrf
+
+    <div class="dash-card dash-form-card">
+        <div class="dash-card-header">
+            <div>
+                <div class="dash-card-title">{{ __('Client & details') }}</div>
+                <div class="dash-card-subtitle">{{ __('Optional client — origin and destination appear on the PDF') }}</div>
+            </div>
+        </div>
+        <div class="dash-form-section">
+            <div class="dash-form-grid dash-form-grid--2" style="max-width:100%;">
+                <div class="dash-form-field">
+                    <label for="client_id">{{ __('Client (optional)') }}</label>
+                    <select id="client_id" name="client_id">
+                        <option value="">— {{ __('No client') }} —</option>
+                        @foreach($clients as $c)
+                            <option value="{{ $c->id }}" {{ old('client_id') == $c->id ? 'selected' : '' }}>{{ $c->name }} @if($c->phone)({{ $c->phone }})@endif</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="dash-form-field">
+                    <label for="issuer_name">{{ __('Issuer name (on PDF)') }}</label>
+                    <input type="text" id="issuer_name" name="issuer_name" value="{{ old('issuer_name') ?? auth()->user()->name }}">
+                </div>
+            </div>
         </div>
     </div>
-    <form action="{{ route('invoices.store') }}" method="POST" style="padding:0 20px 20px;">
-        @csrf
-        <div style="display:grid;gap:20px;max-width:640px;">
+
+    <div class="dash-card dash-form-card">
+        <div class="dash-card-header">
             <div>
-                <label for="client_id" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">{{ __('Client (optional)') }}</label>
-                <select id="client_id" name="client_id" style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
-                    <option value="">— {{ __('No client') }} —</option>
-                    @foreach($clients as $c)
-                        <option value="{{ $c->id }}" {{ old('client_id') == $c->id ? 'selected' : '' }}>{{ $c->name }} @if($c->phone)({{ $c->phone }})@endif</option>
-                    @endforeach
-                </select>
+                <div class="dash-card-title">{{ __('Origin & destination') }}</div>
+                <div class="dash-card-subtitle">{{ __('From and bill-to addresses for the PDF') }}</div>
             </div>
-            <div>
-                <label for="origin" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">{{ __('Origin (issuer address / from)') }}</label>
-                <textarea id="origin" name="origin" rows="3" style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">{{ old('origin', $organization->name) }}</textarea>
-            </div>
-            <div>
-                <label for="destination" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">{{ __('Destination (client / bill to)') }}</label>
-                <textarea id="destination" name="destination" rows="3" style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">{{ old('destination') }}</textarea>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <div>
-                    <label for="issue_date" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">{{ __('Issue date') }} *</label>
-                    <input type="date" id="issue_date" name="issue_date" value="{{ old('issue_date', now()->format('Y-m-d')) }}" required style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
+        </div>
+        <div class="dash-form-section">
+            <div class="dash-form-grid dash-form-grid--2" style="max-width:100%;">
+                <div class="dash-form-field">
+                    <label for="origin">{{ __('Origin (issuer address / from)') }}</label>
+                    <textarea id="origin" name="origin" rows="3">{{ old('origin', $organization->name) }}</textarea>
                 </div>
-                <div>
-                    <label for="due_date" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">{{ __('Due date') }}</label>
-                    <input type="date" id="due_date" name="due_date" value="{{ old('due_date') }}" style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
+                <div class="dash-form-field">
+                    <label for="destination">{{ __('Destination (client / bill to)') }}</label>
+                    <textarea id="destination" name="destination" rows="3">{{ old('destination') }}</textarea>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="dash-card dash-form-card">
+        <div class="dash-card-header">
             <div>
-                <label for="issuer_name" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">{{ __('Issuer name (on PDF)') }}</label>
-                <input type="text" id="issuer_name" name="issuer_name" value="{{ old('issuer_name') ?? auth()->user()->name }}" style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
+                <div class="dash-card-title">{{ __('Dates') }}</div>
+                <div class="dash-card-subtitle">{{ __('Issue and due date for the invoice') }}</div>
             </div>
+        </div>
+        <div class="dash-form-section">
+            <div class="dash-form-grid dash-form-grid--2">
+                <div class="dash-form-field">
+                    <label for="issue_date">{{ __('Issue date') }} <span style="color:var(--dash-danger);">*</span></label>
+                    <input type="date" id="issue_date" name="issue_date" value="{{ old('issue_date', now()->format('Y-m-d')) }}" required>
+                </div>
+                <div class="dash-form-field">
+                    <label for="due_date">{{ __('Due date') }}</label>
+                    <input type="date" id="due_date" name="due_date" value="{{ old('due_date') }}">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dash-card dash-form-card">
+        <div class="dash-card-header">
             <div>
-                <label style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:8px;">{{ __('Items') }} *</label>
-                <div id="invoice-items">
+                <div class="dash-card-title">{{ __('Items') }}</div>
+                <div class="dash-card-subtitle">{{ __('Description, quantity and unit price per line') }}</div>
+            </div>
+        </div>
+        <div class="dash-form-section">
+            <div class="dash-form-field" style="max-width:100%;">
+                <label>{{ __('Items') }} <span style="color:var(--dash-danger);">*</span></label>
+                <div id="invoice-items" class="dash-invoice-items">
                     @php $invoiceItems = old('items') ?? [['description' => '', 'quantity' => 1, 'unit_price' => '']]; @endphp
                     @foreach($invoiceItems as $i => $item)
-                    <div class="dash-invoice-row" style="display:grid;grid-template-columns:2fr 80px 120px 40px;gap:8px;align-items:end;margin-bottom:10px;">
+                    <div class="dash-invoice-row">
                         <div>
-                            <input type="text" name="items[{{ $i }}][description]" value="{{ $item['description'] ?? '' }}" placeholder="{{ __('Description') }}" required style="width:100%;padding:8px 12px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
+                            <input type="text" name="items[{{ $i }}][description]" value="{{ $item['description'] ?? '' }}" placeholder="{{ __('Description') }}" required>
                         </div>
                         <div>
-                            <input type="number" name="items[{{ $i }}][quantity]" value="{{ $item['quantity'] ?? 1 }}" min="0.01" step="0.01" placeholder="Qty" required style="width:100%;padding:8px 12px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
+                            <input type="number" name="items[{{ $i }}][quantity]" value="{{ $item['quantity'] ?? 1 }}" min="0.01" step="0.01" placeholder="Qty" required>
                         </div>
                         <div>
-                            <input type="number" name="items[{{ $i }}][unit_price]" value="{{ $item['unit_price'] ?? '' }}" min="0" step="1" placeholder="{{ __('Unit price') }}" required style="width:100%;padding:8px 12px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
+                            <input type="number" name="items[{{ $i }}][unit_price]" value="{{ $item['unit_price'] ?? '' }}" min="0" step="1" placeholder="{{ __('Unit price') }}" required>
                         </div>
                         <div>
                             @if($i > 0)
-                                <button type="button" class="dash-btn dash-btn-outline" style="padding:6px 10px;font-size:.8rem;" onclick="this.closest('.dash-invoice-row').remove()">×</button>
+                                <button type="button" class="dash-btn dash-btn-outline dash-invoice-remove" style="padding:6px 10px;font-size:.8rem;" aria-label="{{ __('Remove line') }}">×</button>
                             @endif
                         </div>
                     </div>
                     @endforeach
                 </div>
-                <button type="button" class="dash-btn dash-btn-outline" style="margin-top:8px;font-size:.85rem;" id="add-invoice-item">+ {{ __('Add line') }}</button>
-            </div>
-            <div>
-                <label for="notes" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">{{ __('Notes') }}</label>
-                <textarea id="notes" name="notes" rows="2" style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">{{ old('notes') }}</textarea>
-            </div>
-            <div>
-                <button type="submit" class="dash-btn dash-btn-brand">{{ __('Create invoice') }}</button>
+                <button type="button" class="dash-btn dash-btn-outline dash-invoice-add" id="add-invoice-item">+ {{ __('Add line') }}</button>
             </div>
         </div>
-    </form>
-</div>
+    </div>
+
+    <div class="dash-card dash-form-card">
+        <div class="dash-form-section">
+            <div class="dash-form-field" style="max-width:100%;">
+                <label for="notes">{{ __('Notes') }}</label>
+                <textarea id="notes" name="notes" rows="2" placeholder="{{ __('Optional notes on the invoice') }}">{{ old('notes') }}</textarea>
+            </div>
+            <div class="dash-form-actions">
+                <button type="submit" class="dash-btn dash-btn-brand">
+                    <flux:icon.check class="size-4" />
+                    {{ __('Create invoice') }}
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
 
 @push('scripts')
 <script>
@@ -105,17 +151,20 @@
   var container = document.getElementById('invoice-items');
   var addBtn = document.getElementById('add-invoice-item');
   if (!container || !addBtn) return;
-  var index = container.querySelectorAll('.dash-invoice-row').length;
+  var descPlaceholder = {{ json_encode(__('Description')) }};
+  var pricePlaceholder = {{ json_encode(__('Unit price')) }};
   addBtn.addEventListener('click', function() {
+    var index = container.querySelectorAll('.dash-invoice-row').length;
     var row = document.createElement('div');
     row.className = 'dash-invoice-row';
-    row.style.cssText = 'display:grid;grid-template-columns:2fr 80px 120px 40px;gap:8px;align-items:end;margin-bottom:10px;';
-    row.innerHTML = '<div><input type="text" name="items[' + index + '][description]" placeholder="{{ __("Description") }}" required style="width:100%;padding:8px 12px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;"></div>' +
-      '<div><input type="number" name="items[' + index + '][quantity]" value="1" min="0.01" step="0.01" placeholder="Qty" required style="width:100%;padding:8px 12px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;"></div>' +
-      '<div><input type="number" name="items[' + index + '][unit_price]" min="0" step="1" placeholder="{{ __("Unit price") }}" required style="width:100%;padding:8px 12px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;"></div>' +
-      '<div><button type="button" class="dash-btn dash-btn-outline" style="padding:6px 10px;font-size:.8rem;" onclick="this.closest(\'.dash-invoice-row\').remove()">×</button></div>';
+    row.innerHTML = '<div><input type="text" name="items[' + index + '][description]" placeholder="' + descPlaceholder + '" required></div>' +
+      '<div><input type="number" name="items[' + index + '][quantity]" value="1" min="0.01" step="0.01" placeholder="Qty" required></div>' +
+      '<div><input type="number" name="items[' + index + '][unit_price]" min="0" step="1" placeholder="' + pricePlaceholder + '" required></div>' +
+      '<div><button type="button" class="dash-btn dash-btn-outline dash-invoice-remove" style="padding:6px 10px;font-size:.8rem;" aria-label="{{ __("Remove line") }}">×</button></div>';
     container.appendChild(row);
-    index++;
+  });
+  container.addEventListener('click', function(e) {
+    if (e.target.classList.contains('dash-invoice-remove')) e.target.closest('.dash-invoice-row').remove();
   });
 })();
 </script>

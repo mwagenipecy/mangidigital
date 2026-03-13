@@ -1,4 +1,5 @@
-<div class="dash-dd dash-notif-dd" id="dash-notif-dropdown">
+@props(['id' => 'dash-notif-dropdown'])
+<div class="dash-dd dash-notif-dd" id="{{ $id }}">
     <div class="dash-notif-header">
         <div class="dash-notif-title">Notifications <span style="font-size:.72rem;background:var(--dash-brand);color:#fff;padding:2px 7px;border-radius:50px;font-family:'Space Mono',monospace;margin-left:6px">3</span></div>
         <span class="dash-notif-mark" onclick="window.dashMarkAllRead()">Mark all read</span>

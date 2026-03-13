@@ -326,6 +326,8 @@
 .dash-btn-brand:hover { background: var(--dash-brand-dk); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(42,165,189,.35); color: #fff; }
 .dash-btn-outline { background: transparent; border: 1.5px solid var(--dash-border); color: var(--dash-text); }
 .dash-btn-outline:hover { border-color: var(--dash-brand); color: var(--dash-brand); }
+.dash-btn-danger { background: var(--dash-danger); color: #fff; }
+.dash-btn-danger:hover { background: #dc2626; color: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239,68,68,.35); }
 .dash-date-badge {
   display: inline-flex; align-items: center; gap: 7px;
   padding: 7px 14px; border-radius: var(--dash-r-sm);
@@ -427,6 +429,103 @@
 .dash-card-subtitle { font-size: .75rem; color: var(--dash-muted); margin-top: 1px; }
 .dash-card-action { font-size: .78rem; color: var(--dash-brand); font-weight: 600; cursor: pointer; }
 .dash-card-action:hover { text-decoration: underline; }
+
+/* Form layout — cards, sections, grids, fields */
+.dash-form-card { margin-bottom: 20px; }
+.dash-form-card .dash-card-header { flex-wrap: wrap; gap: 12px; }
+.dash-form-section { padding: 0 20px 20px; }
+.dash-form-card .dash-card-header + .dash-form-section { padding-top: 0; }
+.dash-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+.dash-form-grid--2 { grid-template-columns: repeat(2, 1fr); }
+.dash-form-grid--4 { grid-template-columns: repeat(4, 1fr); }
+.dash-form-field { min-width: 0; }
+.dash-form-field label {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--dash-ink);
+  margin-bottom: 6px;
+}
+.dash-form-field input,
+.dash-form-field select,
+.dash-form-field textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--dash-border);
+  border-radius: var(--dash-r-sm);
+  font-size: .9rem;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--dash-ink);
+  background: #fff;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.dash-form-field input:focus,
+.dash-form-field select:focus,
+.dash-form-field textarea:focus {
+  outline: none;
+  border-color: var(--dash-brand);
+  box-shadow: 0 0 0 3px var(--dash-brand-10);
+}
+.dash-form-field textarea { resize: vertical; min-height: 80px; }
+.dash-form-field .dash-form-error { font-size: .8rem; color: var(--dash-danger); margin-top: 4px; }
+.dash-form-check { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.dash-form-check input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--dash-brand); cursor: pointer; flex-shrink: 0; }
+.dash-form-actions { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.dash-form-hint { font-size: .8rem; color: var(--dash-muted); margin-top: 8px; }
+
+/* Invoice create — item rows */
+.dash-invoice-items { margin-bottom: 12px; }
+.dash-invoice-row {
+  display: grid;
+  grid-template-columns: 2fr 90px 120px 44px;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 10px;
+}
+.dash-invoice-row input {
+  width: 100%;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1.5px solid var(--dash-border);
+  border-radius: var(--dash-r-sm);
+  font-size: .9rem;
+  font-family: 'DM Sans', sans-serif;
+  box-sizing: border-box;
+}
+.dash-invoice-row input:focus {
+  outline: none;
+  border-color: var(--dash-brand);
+  box-shadow: 0 0 0 3px var(--dash-brand-10);
+}
+.dash-invoice-add { margin-top: 8px; }
+
+/* Sale items table — desktop table, mobile-friendly scroll & inputs */
+.dash-sale-items-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.dash-sale-items-wrap .dash-table { min-width: 640px; }
+.dash-sale-items-wrap .dash-table input,
+.dash-sale-items-wrap .dash-table select {
+  width: 100%;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1.5px solid var(--dash-border);
+  border-radius: var(--dash-r-sm);
+  font-size: .9rem;
+  font-family: 'DM Sans', sans-serif;
+  box-sizing: border-box;
+}
+.dash-sale-items-wrap .dash-table th { white-space: nowrap; }
+.dash-sale-items-wrap .dash-table td { vertical-align: top; }
+.dash-sale-item-product { min-width: 180px; }
+.dash-sale-item-store { min-width: 120px; }
+.dash-sale-item-qty { width: 90px; }
+.dash-sale-item-price { width: 120px; }
+.dash-sale-item-actions { width: 44px; }
 
 .dash-bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 120px; margin-bottom: 8px; }
 .dash-bc-bar { flex: 1; border-radius: 5px 5px 0 0; position: relative; transition: opacity .2s; cursor: pointer; min-width: 0; }
@@ -680,12 +779,62 @@
 .dash-mob-search-inner input:focus { border-color: var(--dash-brand); }
 .dash-mob-search-inner .dash-hdr-search-icon { left: 10px; top: 50%; transform: translateY(-50%); }
 
+.dash-mob-dropdowns {
+  display: none;
+}
+
 .dash-overlay {
   display: none; position: fixed; inset: 0;
   background: rgba(11,31,38,.4); backdrop-filter: blur(3px);
   z-index: 450;
 }
 .dash-overlay.show { display: block; }
+
+/* Modal (e.g. add category) */
+.dash-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(11,31,38,.45);
+  backdrop-filter: blur(4px);
+  z-index: 600;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.dash-modal-overlay.show {
+  display: flex;
+}
+.dash-modal-dialog {
+  background: #fff;
+  border-radius: var(--dash-r);
+  box-shadow: var(--dash-shadow-lg);
+  border: 1px solid var(--dash-border);
+  width: 100%;
+  max-width: 440px;
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+}
+.dash-modal-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--dash-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.dash-modal-title { font-size: 1.1rem; font-weight: 600; color: var(--dash-ink); margin: 0; }
+.dash-modal-close {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: transparent;
+  border-radius: var(--dash-r-sm);
+  color: var(--dash-muted);
+  cursor: pointer;
+  transition: background .2s, color .2s;
+}
+.dash-modal-close:hover { background: var(--dash-brand-10); color: var(--dash-ink); }
+.dash-modal-body { padding: 20px; }
 
 .dash-mobile-sidebar {
   display: none;
@@ -717,6 +866,8 @@
   .dash-tables-grid { grid-template-columns: 1fr; }
   .dash-qa-grid { grid-template-columns: repeat(2, 1fr); }
   .dash-admin-stats-grid { grid-template-columns: repeat(3, 1fr); }
+  .dash-form-grid { grid-template-columns: repeat(2, 1fr); }
+  .dash-form-grid--4 { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 768px) {
   .dash-sidebar { display: none; }
@@ -734,11 +885,58 @@
   .dash-kpi-value { font-size: 1.3rem; }
   .dash-hdr-search { display: none; }
   .dash-admin-stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .dash-form-section { padding: 0 16px 16px; }
+  .dash-form-card.dash-card { padding: 16px; }
+  .dash-form-grid,
+  .dash-form-grid--2,
+  .dash-form-grid--4 { grid-template-columns: 1fr; gap: 14px; }
+  .dash-sale-items-wrap .dash-table { min-width: 520px; font-size: .8rem; }
+  .dash-sale-items-wrap .dash-table input,
+  .dash-sale-items-wrap .dash-table select { padding: 10px 12px; font-size: 16px; min-height: 44px; }
+  .dash-form-actions { margin-top: 16px; }
+  .dash-form-actions .dash-btn { width: 100%; justify-content: center; }
+  .dash-invoice-row { grid-template-columns: 1fr 70px 90px 44px; gap: 8px; }
+  .dash-invoice-row input { padding: 10px 12px; font-size: 16px; min-height: 44px; }
+  /* Mobile dropdowns: above overlay (z 460) so they stay clickable */
+  .dash-mob-dropdowns {
+    display: block;
+    position: fixed;
+    top: 56px;
+    left: 0;
+    right: 0;
+    bottom: auto;
+    z-index: 460;
+    pointer-events: none;
+  }
+  .dash-mob-dropdowns .dash-dd {
+    position: fixed;
+    top: 56px;
+    right: 12px;
+    left: auto;
+    width: min(320px, calc(100vw - 24px));
+    max-height: calc(100vh - 70px);
+    overflow-y: auto;
+    pointer-events: none;
+  }
+  .dash-mob-dropdowns .dash-dd.open {
+    pointer-events: all;
+  }
+  .dash-mob-dropdowns .dash-notif-dd {
+    width: min(320px, calc(100vw - 24px));
+  }
 }
 @media (max-width: 480px) {
   .dash-main { padding: 12px; }
   .dash-kpi-value { font-size: 1.2rem; }
   .dash-card { padding: 14px; }
+  .dash-form-section { padding: 0 14px 14px; }
+  .dash-form-card .dash-card-header { flex-direction: column; align-items: flex-start; }
+  .dash-form-card .dash-card-header .dash-btn { width: 100%; justify-content: center; }
+  .dash-sale-items-wrap .dash-table { min-width: 480px; }
+  .dash-page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .dash-page-header .dash-btn { width: 100%; justify-content: center; }
+  .dash-invoice-row { grid-template-columns: 1fr 60px 80px 40px; gap: 6px; }
+  .dash-invoice-row input { padding: 8px 10px; font-size: 16px; min-height: 42px; }
   .dash-kpi-icon svg { width: 1.125rem; height: 1.125rem; min-width: 1.125rem; min-height: 1.125rem; }
   .dash-qa-icon svg { width: 1.25rem; height: 1.25rem; min-width: 1.25rem; min-height: 1.25rem; }
   .dash-bn-inner { height: 60px; padding: 0; }

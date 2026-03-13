@@ -25,7 +25,7 @@
 
 @section('content')
 <div class="account-form-wrap" x-data="registerForm()" x-init="init()">
-    <div class="mb-6 flex items-center justify-between">
+    <div class="account-form-header mb-6 flex flex-wrap items-center justify-between gap-3">
         <a href="{{ route('home') }}" class="account-logo account-logo-dark no-underline text-[1.1rem]" wire:navigate>
             <span class="account-logo-icon w-[30px] h-[30px] text-[.7rem]">MD</span>
             Mangi<span>Digital</span>
@@ -106,9 +106,9 @@
 
             <div class="account-field">
                 <label for="phone">Phone Number <span class="req">*</span></label>
-                <div class="account-phone-group">
-                    <input type="text" name="phone_code" value="+255" readonly class="account-phone-code">
-                    <input type="tel" id="phone" name="phone" value="{{ old('phone') }}" placeholder="712 345 678" class="account-phone-num {{ $errors->has('phone') ? 'border-red-500' : '' }}">
+                <div class="account-input-wrap">
+                    <input type="tel" id="phone" name="phone" value="{{ old('phone') }}" placeholder="0712 345 678" required
+                        class="{{ $errors->has('phone') ? 'border-red-500' : '' }}">
                 </div>
                 @error('phone')<div class="account-field-error">{{ $message }}</div>@enderror
             </div>
@@ -356,9 +356,8 @@
                 </div>
                 <div class="account-field">
                     <label>Mobile Number</label>
-                    <div class="account-phone-group account-input-wrap">
-                        <input type="text" value="+255" readonly class="account-phone-code" style="padding:12px 16px;">
-                        <input type="tel" name="mobile_number" placeholder="712 345 678" class="account-phone-num">
+                    <div class="account-input-wrap">
+                        <input type="tel" name="mobile_number" placeholder="0712 345 678">
                     </div>
                 </div>
                 <p class="text-[.82rem] text-[var(--muted)] bg-[var(--border-lt)] p-3 rounded-[var(--r-sm)] border border-[var(--border-lt)]">

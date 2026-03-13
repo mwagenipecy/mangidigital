@@ -14,46 +14,45 @@
     </div>
 </div>
 
-<div class="dash-card">
-    <div class="dash-card-header">
-        <div>
-            <div class="dash-card-title">Store details</div>
-            <div class="dash-card-subtitle">Enter the store or shop information</div>
+<form action="{{ route('stores.store') }}" method="POST">
+    @csrf
+    <div class="dash-card dash-form-card">
+        <div class="dash-card-header">
+            <div>
+                <div class="dash-card-title">Store details</div>
+                <div class="dash-card-subtitle">Enter the store or shop information</div>
+            </div>
+        </div>
+        <div class="dash-form-section">
+            <div class="dash-form-grid dash-form-grid--2" style="max-width:100%;">
+                <div class="dash-form-field">
+                    <label for="name">Store name <span style="color:var(--dash-danger);">*</span></label>
+                    <input type="text" id="name" name="name" value="{{ old('name') }}" required placeholder="e.g. Main branch">
+                    @error('name')<p class="dash-form-error">{{ $message }}</p>@enderror
+                </div>
+                <div class="dash-form-field">
+                    <label for="address">Address</label>
+                    <input type="text" id="address" name="address" value="{{ old('address') }}" placeholder="Street, area">
+                    @error('address')<p class="dash-form-error">{{ $message }}</p>@enderror
+                </div>
+                <div class="dash-form-field">
+                    <label for="phone">Phone</label>
+                    <input type="text" id="phone" name="phone" value="{{ old('phone') }}" placeholder="e.g. 0712 345 678">
+                    @error('phone')<p class="dash-form-error">{{ $message }}</p>@enderror
+                </div>
+                <div class="dash-form-field">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" value="{{ old('email') }}" placeholder="store@example.com">
+                    @error('email')<p class="dash-form-error">{{ $message }}</p>@enderror
+                </div>
+            </div>
+            <div class="dash-form-actions">
+                <button type="submit" class="dash-btn dash-btn-brand">
+                    <flux:icon.check class="size-4" />
+                    Save store
+                </button>
+            </div>
         </div>
     </div>
-    <form action="{{ route('stores.store') }}" method="POST" style="padding:0 20px 20px;">
-        @csrf
-        <div style="display:flex;flex-direction:column;gap:16px;max-width:400px;">
-            <div>
-                <label for="name" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Store name <span style="color:var(--dash-danger);">*</span></label>
-                <input type="text" id="name" name="name" value="{{ old('name') }}" required
-                    style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;"
-                    placeholder="e.g. Main branch">
-                @error('name')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label for="address" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Address</label>
-                <input type="text" id="address" name="address" value="{{ old('address') }}"
-                    style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;"
-                    placeholder="Street, area">
-                @error('address')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label for="phone" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Phone</label>
-                <input type="text" id="phone" name="phone" value="{{ old('phone') }}"
-                    style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;"
-                    placeholder="e.g. 0712 345 678">
-                @error('phone')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label for="email" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Email</label>
-                <input type="email" id="email" name="email" value="{{ old('email') }}"
-                    style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;"
-                    placeholder="store@example.com">
-                @error('email')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
-            </div>
-            <button type="submit" class="dash-btn dash-btn-brand" style="align-self:flex-start;">Save store</button>
-        </div>
-    </form>
-</div>
+</form>
 @endsection

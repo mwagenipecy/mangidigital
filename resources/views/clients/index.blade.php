@@ -8,6 +8,7 @@
         <h1 class="dash-page-title">Clients</h1>
         <p class="dash-page-subtitle">Name and phone — used for sales and receipts</p>
     </div>
+    <button type="button" class="dash-btn dash-btn-brand" onclick="document.getElementById('addClientModal').classList.add('show')">Add client</button>
 </div>
 
 @if(session('error'))
@@ -21,33 +22,38 @@
     </div>
 @endif
 
-<div class="dash-card" style="margin-bottom:20px;">
-    <div class="dash-card-header">
-        <div>
-            <div class="dash-card-title">Add client</div>
-            <div class="dash-card-subtitle">Name and phone are required for sales</div>
+<div class="dash-modal-overlay" id="addClientModal" role="dialog" aria-modal="true" aria-labelledby="addClientModalTitle" onclick="if(event.target===this) this.classList.remove('show')">
+    <div class="dash-modal-dialog" onclick="event.stopPropagation()">
+        <div class="dash-modal-header">
+            <h2 class="dash-modal-title" id="addClientModalTitle">Add client</h2>
+            <button type="button" class="dash-modal-close" onclick="document.getElementById('addClientModal').classList.remove('show')" aria-label="Close">&times;</button>
+        </div>
+        <div class="dash-modal-body">
+            <form action="{{ route('clients.store') }}" method="POST">
+                @csrf
+                <div style="display:flex;flex-direction:column;gap:16px;">
+                    <div>
+                        <label for="name" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Name *</label>
+                        <input type="text" id="name" name="name" value="{{ old('name') }}" required style="width:100%;max-width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;box-sizing:border-box;">
+                        @error('name')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label for="phone" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Phone *</label>
+                        <input type="text" id="phone" name="phone" value="{{ old('phone') }}" required style="width:100%;max-width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;box-sizing:border-box;">
+                        @error('phone')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label for="email" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Email</label>
+                        <input type="email" id="email" name="email" value="{{ old('email') }}" style="width:100%;max-width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;box-sizing:border-box;">
+                    </div>
+                    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+                        <button type="button" class="dash-btn dash-btn-outline" onclick="document.getElementById('addClientModal').classList.remove('show')">Cancel</button>
+                        <button type="submit" class="dash-btn dash-btn-brand">Add client</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
-    <form action="{{ route('clients.store') }}" method="POST" style="padding:0 20px 20px;">
-        @csrf
-        <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;">
-            <div>
-                <label for="name" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Name *</label>
-                <input type="text" id="name" name="name" value="{{ old('name') }}" required style="width:200px;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
-                @error('name')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label for="phone" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Phone *</label>
-                <input type="text" id="phone" name="phone" value="{{ old('phone') }}" required style="width:160px;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
-                @error('phone')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label for="email" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Email</label>
-                <input type="email" id="email" name="email" value="{{ old('email') }}" style="width:200px;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
-            </div>
-            <button type="submit" class="dash-btn dash-btn-brand">Add client</button>
-        </div>
-    </form>
 </div>
 
 <div class="dash-card">
@@ -75,7 +81,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="3" style="text-align:center;padding:24px;color:var(--dash-muted);">No clients yet. Add name and phone above, or add when recording a sale.</td>
+                    <td colspan="3" style="text-align:center;padding:24px;color:var(--dash-muted);">No clients yet. Click “Add client” to create one, or add when recording a sale.</td>
                 </tr>
                 @endforelse
             </tbody>
@@ -93,4 +99,8 @@
         </div>
     @endif
 </div>
+
+@if($errors->isNotEmpty())
+<script>document.addEventListener('DOMContentLoaded', function() { document.getElementById('addClientModal').classList.add('show'); });</script>
+@endif
 @endsection

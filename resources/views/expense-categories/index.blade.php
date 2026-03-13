@@ -8,7 +8,10 @@
         <h1 class="dash-page-title">Expense categories</h1>
         <p class="dash-page-subtitle">Sections for categorizing expenses</p>
     </div>
-    <a href="{{ route('expenses.index') }}" class="dash-btn dash-btn-outline" wire:navigate>View expenses</a>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button type="button" class="dash-btn dash-btn-brand" onclick="document.getElementById('addCategoryModal').classList.add('show')">Add category</button>
+        <a href="{{ route('expenses.index') }}" class="dash-btn dash-btn-outline" wire:navigate>View expenses</a>
+    </div>
 </div>
 
 @if(session('error'))
@@ -22,28 +25,33 @@
     </div>
 @endif
 
-<div class="dash-card" style="margin-bottom:20px;">
-    <div class="dash-card-header">
-        <div>
-            <div class="dash-card-title">Add category</div>
-            <div class="dash-card-subtitle">Name and optional description</div>
+<div class="dash-modal-overlay" id="addCategoryModal" role="dialog" aria-modal="true" aria-labelledby="addCategoryModalTitle" onclick="if(event.target===this) this.classList.remove('show')">
+    <div class="dash-modal-dialog" onclick="event.stopPropagation()">
+        <div class="dash-modal-header">
+            <h2 class="dash-modal-title" id="addCategoryModalTitle">Add category</h2>
+            <button type="button" class="dash-modal-close" onclick="document.getElementById('addCategoryModal').classList.remove('show')" aria-label="Close">&times;</button>
+        </div>
+        <div class="dash-modal-body">
+            <form action="{{ route('expense-categories.store') }}" method="POST">
+                @csrf
+                <div style="display:flex;flex-direction:column;gap:16px;">
+                    <div>
+                        <label for="name" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Category name *</label>
+                        <input type="text" id="name" name="name" value="{{ old('name') }}" required style="width:100%;max-width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;box-sizing:border-box;" placeholder="e.g. Transport, Rent">
+                        @error('name')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label for="description" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Description</label>
+                        <input type="text" id="description" name="description" value="{{ old('description') }}" style="width:100%;max-width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;box-sizing:border-box;" placeholder="Optional">
+                    </div>
+                    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+                        <button type="button" class="dash-btn dash-btn-outline" onclick="document.getElementById('addCategoryModal').classList.remove('show')">Cancel</button>
+                        <button type="submit" class="dash-btn dash-btn-brand">Add category</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
-    <form action="{{ route('expense-categories.store') }}" method="POST" style="padding:0 20px 20px;">
-        @csrf
-        <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;">
-            <div>
-                <label for="name" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Category name *</label>
-                <input type="text" id="name" name="name" value="{{ old('name') }}" required style="width:220px;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;" placeholder="e.g. Transport, Rent">
-                @error('name')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label for="description" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Description</label>
-                <input type="text" id="description" name="description" value="{{ old('description') }}" style="width:260px;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;" placeholder="Optional">
-            </div>
-            <button type="submit" class="dash-btn dash-btn-brand">Add category</button>
-        </div>
-    </form>
 </div>
 
 <div class="dash-card">
@@ -81,11 +89,15 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="3" style="text-align:center;padding:24px;color:var(--dash-muted);">No categories yet. Add one above.</td>
+                    <td colspan="3" style="text-align:center;padding:24px;color:var(--dash-muted);">No categories yet. Click “Add category” to create one.</td>
                 </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 </div>
+
+@if($errors->isNotEmpty())
+<script>document.addEventListener('DOMContentLoaded', function() { document.getElementById('addCategoryModal').classList.add('show'); });</script>
+@endif
 @endsection

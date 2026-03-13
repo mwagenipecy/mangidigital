@@ -24,84 +24,90 @@
 
 <form action="{{ route('stock-returns.store') }}" method="POST" id="return-form">
     @csrf
-    <div class="dash-card" style="margin-bottom:20px;">
+
+    <div class="dash-card dash-form-card">
         <div class="dash-card-header">
             <div>
                 <div class="dash-card-title">Return details</div>
-                <div class="dash-card-subtitle">Optional: link to a sale</div>
+                <div class="dash-card-subtitle">Optional: link to a sale and add notes</div>
             </div>
         </div>
-        <div style="padding:0 20px 20px;">
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;">
-                <div>
-                    <label for="sale_id" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Sale (optional)</label>
-                    <select id="sale_id" name="sale_id" style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
+        <div class="dash-form-section">
+            <div class="dash-form-grid dash-form-grid--2">
+                <div class="dash-form-field">
+                    <label for="sale_id">Sale (optional)</label>
+                    <select id="sale_id" name="sale_id">
                         <option value="">— None —</option>
                         @foreach($sales as $s)
                             <option value="{{ $s->id }}" {{ old('sale_id') == $s->id ? 'selected' : '' }}>{{ $s->receipt_number ?? '#' . $s->id }} — {{ $s->sale_date?->format('d M Y') }} ({{ $s->display_client_name }})</option>
                         @endforeach
                     </select>
                 </div>
-                <div>
-                    <label for="return_date" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Return date *</label>
-                    <input type="date" id="return_date" name="return_date" value="{{ old('return_date', date('Y-m-d')) }}" required style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
+                <div class="dash-form-field">
+                    <label for="return_date">Return date <span style="color:var(--dash-danger);">*</span></label>
+                    <input type="date" id="return_date" name="return_date" value="{{ old('return_date', date('Y-m-d')) }}" required>
                 </div>
             </div>
-            <div style="margin-top:16px;">
-                <label for="notes" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Notes</label>
-                <textarea id="notes" name="notes" rows="2" style="width:100%;max-width:400px;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">{{ old('notes') }}</textarea>
+            <div class="dash-form-field" style="margin-top:4px;">
+                <label for="notes">Notes</label>
+                <textarea id="notes" name="notes" rows="2" placeholder="Optional notes">{{ old('notes') }}</textarea>
             </div>
         </div>
     </div>
 
-    <div class="dash-card" style="margin-bottom:20px;">
+    <div class="dash-card dash-form-card">
         <div class="dash-card-header">
             <div>
                 <div class="dash-card-title">Items returned</div>
                 <div class="dash-card-subtitle">Product, store to return to, quantity — stock will be added back to inventory</div>
             </div>
-            <button type="button" id="add-return-item" class="dash-btn dash-btn-outline" style="font-size:.85rem;">Add row</button>
+            <button type="button" id="add-return-item" class="dash-btn dash-btn-outline">Add row</button>
         </div>
-        <div style="padding:0 20px 20px;overflow-x:auto;">
-            <table class="dash-table" id="return-items-table">
-                <thead>
-                    <tr>
-                        <th>Product / name</th>
-                        <th>Store (return to)</th>
-                        <th>Quantity</th>
-                        <th>Reason</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody id="return-items-tbody">
-                    <tr class="return-item-row">
-                        <td>
-                            <select name="items[0][product_id]" class="return-product" style="width:100%;min-width:160px;padding:8px 10px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
-                                <option value="">— Other —</option>
-                                @foreach($products as $p)
-                                    <option value="{{ $p->id }}">{{ $p->name }}</option>
-                                @endforeach
-                            </select>
-                            <input type="text" name="items[0][product_name_override]" class="return-name-override" style="width:100%;min-width:140px;margin-top:4px;padding:6px 10px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.85rem;display:none;" placeholder="Product name (when other)">
-                        </td>
-                        <td>
-                            <select name="items[0][store_id]" required style="width:100%;min-width:120px;padding:8px 10px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
-                                <option value="">Select store</option>
-                                @foreach($stores as $s)
-                                    <option value="{{ $s->id }}">{{ $s->name }}</option>
-                                @endforeach
-                            </select>
-                        </td>
-                        <td><input type="number" name="items[0][quantity]" value="{{ old('items.0.quantity') }}" min="0.01" step="any" required style="width:90px;padding:8px 10px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;"></td>
-                        <td><input type="text" name="items[0][reason]" value="{{ old('items.0.reason') }}" style="width:140px;padding:8px 10px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;" placeholder="Optional"></td>
-                        <td></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <p style="font-size:.8rem;color:var(--dash-muted);margin:8px 20px 20px;">Only items with a product from your catalog will update inventory. “Other” is for record only.</p>
-        <div style="padding:0 20px 20px;">
-            <button type="submit" class="dash-btn dash-btn-brand">Save return</button>
+        <div class="dash-form-section">
+            <div class="dash-sale-items-wrap">
+                <table class="dash-table" id="return-items-table">
+                    <thead>
+                        <tr>
+                            <th class="dash-sale-item-product">Product / name</th>
+                            <th class="dash-sale-item-store">Store (return to)</th>
+                            <th class="dash-sale-item-qty">Quantity</th>
+                            <th style="min-width:120px;">Reason</th>
+                            <th class="dash-sale-item-actions"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="return-items-tbody">
+                        <tr class="return-item-row">
+                            <td class="dash-sale-item-product">
+                                <select name="items[0][product_id]" class="return-product">
+                                    <option value="">— Other —</option>
+                                    @foreach($products as $p)
+                                        <option value="{{ $p->id }}">{{ $p->name }}</option>
+                                    @endforeach
+                                </select>
+                                <input type="text" name="items[0][product_name_override]" class="return-name-override" style="margin-top:6px;display:none;" placeholder="Product name (when other)">
+                            </td>
+                            <td class="dash-sale-item-store">
+                                <select name="items[0][store_id]" required>
+                                    <option value="">Select store</option>
+                                    @foreach($stores as $s)
+                                        <option value="{{ $s->id }}">{{ $s->name }}</option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            <td class="dash-sale-item-qty"><input type="number" name="items[0][quantity]" value="{{ old('items.0.quantity') }}" min="0.01" step="any" required></td>
+                            <td><input type="text" name="items[0][reason]" value="{{ old('items.0.reason') }}" placeholder="Optional"></td>
+                            <td class="dash-sale-item-actions"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="dash-form-hint">Only items with a product from your catalog will update inventory. “Other” is for record only.</p>
+            <div class="dash-form-actions">
+                <button type="submit" class="dash-btn dash-btn-brand">
+                    <flux:icon.check class="size-4" />
+                    Save return
+                </button>
+            </div>
         </div>
     </div>
 </form>
@@ -122,20 +128,19 @@ document.getElementById('add-return-item').addEventListener('click', function() 
     var storeOpts = Array.from(first.querySelector('select[name^="items"][name*="store_id"]').options).map(function(o) { return { v: o.value, t: o.text }; }).filter(function(x) { return x.v; });
     var tr = document.createElement('tr');
     tr.className = 'return-item-row';
-    var productHtml = '<select name="items[' + idx + '][product_id]" class="return-product" style="width:100%;min-width:160px;padding:8px 10px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;"><option value="">— Other —</option>';
+    var productHtml = '<select name="items[' + idx + '][product_id]" class="return-product"><option value="">— Other —</option>';
     productOpts.forEach(function(o) { productHtml += '<option value="' + o.v + '">' + o.t + '</option>'; });
-    productHtml += '</select><input type="text" name="items[' + idx + '][product_name_override]" class="return-name-override" style="width:100%;min-width:140px;margin-top:4px;padding:6px 10px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.85rem;display:none;" placeholder="Product name (when other)">';
-    var storeHtml = '<select name="items[' + idx + '][store_id]" required style="width:100%;min-width:120px;padding:8px 10px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;"><option value="">Select store</option>';
+    productHtml += '</select><input type="text" name="items[' + idx + '][product_name_override]" class="return-name-override" style="margin-top:6px;display:none;" placeholder="Product name (when other)">';
+    var storeHtml = '<select name="items[' + idx + '][store_id]" required><option value="">Select store</option>';
     storeOpts.forEach(function(o) { storeHtml += '<option value="' + o.v + '">' + o.t + '</option>'; });
     storeHtml += '</select>';
-    tr.innerHTML = '<td>' + productHtml + '</td><td>' + storeHtml + '</td><td><input type="number" name="items[' + idx + '][quantity]" min="0.01" step="any" required style="width:90px;padding:8px 10px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;"></td><td><input type="text" name="items[' + idx + '][reason]" style="width:140px;padding:8px 10px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;"></td><td><button type="button" class="dash-btn dash-btn-outline remove-return-item" style="padding:4px 8px;font-size:.75rem;">Remove</button></td>';
+    tr.innerHTML = '<td class="dash-sale-item-product">' + productHtml + '</td><td class="dash-sale-item-store">' + storeHtml + '</td><td class="dash-sale-item-qty"><input type="number" name="items[' + idx + '][quantity]" min="0.01" step="any" required></td><td><input type="text" name="items[' + idx + '][reason]" placeholder="Optional"></td><td class="dash-sale-item-actions"><button type="button" class="dash-btn dash-btn-outline remove-return-item" style="padding:4px 8px;font-size:.75rem;">Remove</button></td>';
     tbody.appendChild(tr);
     tr.querySelector('.return-product').addEventListener('change', function() {
         var r = this.closest('tr');
         var o = r.querySelector('.return-name-override');
         if (this.value === '') { if (o) o.style.display = 'block'; } else { if (o) o.style.display = 'none'; }
     });
-    tr.querySelector('.remove-return-item').addEventListener('click', function() { tr.remove(); });
 });
 document.getElementById('return-items-tbody').addEventListener('click', function(e) {
     if (e.target.classList.contains('remove-return-item')) e.target.closest('tr').remove();

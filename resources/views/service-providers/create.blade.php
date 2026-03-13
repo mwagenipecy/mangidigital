@@ -14,57 +14,59 @@
     </div>
 </div>
 
-<div class="dash-card">
-    <div class="dash-card-header">
-        <div>
-            <div class="dash-card-title">New service provider</div>
-            <div class="dash-card-subtitle">Identifier: international transport / local transport / clearance & forwarding</div>
+<form action="{{ route('service-providers.store') }}" method="POST">
+    @csrf
+    <div class="dash-card dash-form-card">
+        <div class="dash-card-header">
+            <div>
+                <div class="dash-card-title">New service provider</div>
+                <div class="dash-card-subtitle">Company details and contact — type: international transport / local transport / clearance & forwarding</div>
+            </div>
+        </div>
+        <div class="dash-form-section">
+            <div class="dash-form-grid dash-form-grid--2" style="max-width:100%;">
+                <div class="dash-form-field">
+                    <label for="name">Company name <span style="color:var(--dash-danger);">*</span></label>
+                    <input type="text" id="name" name="name" value="{{ old('name') }}" required>
+                    @error('name')<p class="dash-form-error">{{ $message }}</p>@enderror
+                </div>
+                <div class="dash-form-field">
+                    <label for="type">Type / identifier <span style="color:var(--dash-danger);">*</span></label>
+                    <select id="type" name="type" required>
+                        <option value="international_transport" {{ old('type') === 'international_transport' ? 'selected' : '' }}>International transport</option>
+                        <option value="local_transport" {{ old('type') === 'local_transport' ? 'selected' : '' }}>Local transport</option>
+                        <option value="clearance_forwarding" {{ old('type') === 'clearance_forwarding' ? 'selected' : '' }}>Clearance & forwarding</option>
+                    </select>
+                    @error('type')<p class="dash-form-error">{{ $message }}</p>@enderror
+                </div>
+                <div class="dash-form-field">
+                    <label for="contact_phone">Phone</label>
+                    <input type="text" id="contact_phone" name="contact_phone" value="{{ old('contact_phone') }}">
+                    @error('contact_phone')<p class="dash-form-error">{{ $message }}</p>@enderror
+                </div>
+                <div class="dash-form-field">
+                    <label for="contact_email">Email</label>
+                    <input type="email" id="contact_email" name="contact_email" value="{{ old('contact_email') }}">
+                    @error('contact_email')<p class="dash-form-error">{{ $message }}</p>@enderror
+                </div>
+                <div class="dash-form-field" style="grid-column: 1 / -1;">
+                    <label for="address">Address</label>
+                    <input type="text" id="address" name="address" value="{{ old('address') }}">
+                    @error('address')<p class="dash-form-error">{{ $message }}</p>@enderror
+                </div>
+                <div class="dash-form-field" style="grid-column: 1 / -1;">
+                    <label for="notes">Notes</label>
+                    <textarea id="notes" name="notes" rows="2">{{ old('notes') }}</textarea>
+                    @error('notes')<p class="dash-form-error">{{ $message }}</p>@enderror
+                </div>
+            </div>
+            <div class="dash-form-actions">
+                <button type="submit" class="dash-btn dash-btn-brand">
+                    <flux:icon.check class="size-4" />
+                    Save
+                </button>
+            </div>
         </div>
     </div>
-    <form action="{{ route('service-providers.store') }}" method="POST" style="padding:0 20px 20px;">
-        @csrf
-        <div style="display:flex;flex-direction:column;gap:16px;max-width:420px;">
-            <div>
-                <label for="name" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Company name <span style="color:var(--dash-danger);">*</span></label>
-                <input type="text" id="name" name="name" value="{{ old('name') }}" required
-                    style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
-                @error('name')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label for="type" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Type / identifier <span style="color:var(--dash-danger);">*</span></label>
-                <select id="type" name="type" required
-                    style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
-                    <option value="international_transport" {{ old('type') === 'international_transport' ? 'selected' : '' }}>International transport</option>
-                    <option value="local_transport" {{ old('type') === 'local_transport' ? 'selected' : '' }}>Local transport</option>
-                    <option value="clearance_forwarding" {{ old('type') === 'clearance_forwarding' ? 'selected' : '' }}>Clearance & forwarding</option>
-                </select>
-                @error('type')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label for="contact_phone" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Phone</label>
-                <input type="text" id="contact_phone" name="contact_phone" value="{{ old('contact_phone') }}"
-                    style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
-                @error('contact_phone')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label for="contact_email" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Email</label>
-                <input type="email" id="contact_email" name="contact_email" value="{{ old('contact_email') }}"
-                    style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
-                @error('contact_email')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label for="address" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Address</label>
-                <input type="text" id="address" name="address" value="{{ old('address') }}"
-                    style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
-                @error('address')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label for="notes" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Notes</label>
-                <textarea id="notes" name="notes" rows="2" style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">{{ old('notes') }}</textarea>
-                @error('notes')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
-            </div>
-            <button type="submit" class="dash-btn dash-btn-brand" style="align-self:flex-start;">Save</button>
-        </div>
-    </form>
-</div>
+</form>
 @endsection

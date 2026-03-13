@@ -14,6 +14,10 @@
 <div class="dash-overlay" id="dashOverlay" onclick="window.dashCloseAll()"></div>
 
 <x-dashboard.mobile-header />
+<div class="dash-mob-dropdowns" id="dashMobDropdowns" aria-hidden="true">
+    <x-dashboard.notification-dropdown id="dash-mob-notif-dropdown" />
+    <x-dashboard.profile-dropdown id="dash-mob-profile-dropdown" />
+</div>
 <x-dashboard.mobile-sidebar />
 
 <div class="dash-shell" id="dashShell">
@@ -47,20 +51,29 @@
     document.body.style.overflow = '';
   };
   window.dashToggleNotif = function() {
-    var dd = document.getElementById('dash-notif-dropdown');
+    var isMobile = window.innerWidth <= 768;
+    var dd = document.getElementById(isMobile ? 'dash-mob-notif-dropdown' : 'dash-notif-dropdown');
     var isOpen = dd && dd.classList.contains('open');
     window.dashCloseAll();
-    if (dd && !isOpen) dd.classList.add('open');
+    if (dd && !isOpen) {
+      dd.classList.add('open');
+      if (isMobile) { var o = document.getElementById('dashOverlay'); if (o) o.classList.add('show'); document.body.style.overflow = 'hidden'; }
+    }
   };
   window.dashToggleProfile = function() {
-    var dd = document.getElementById('dash-profile-dropdown');
+    var isMobile = window.innerWidth <= 768;
+    var dd = document.getElementById(isMobile ? 'dash-mob-profile-dropdown' : 'dash-profile-dropdown');
     var isOpen = dd && dd.classList.contains('open');
     window.dashCloseAll();
-    if (dd && !isOpen) dd.classList.add('open');
+    if (dd && !isOpen) {
+      dd.classList.add('open');
+      if (isMobile) { var o = document.getElementById('dashOverlay'); if (o) o.classList.add('show'); document.body.style.overflow = 'hidden'; }
+    }
   };
   window.dashCloseAll = function() {
     document.querySelectorAll('.dash-dd').forEach(function(d) { d.classList.remove('open'); });
     var o = document.getElementById('dashOverlay'); if (o) o.classList.remove('show');
+    document.body.style.overflow = '';
     window.dashCloseMobileSidebar();
   };
   window.dashMarkAllRead = function() {
@@ -86,7 +99,9 @@
 })();
 document.addEventListener('click', function(e) {
   if (!e.target.closest('#dash-notif-btn') && !e.target.closest('#dash-notif-dropdown') &&
+      !e.target.closest('#dash-mob-notif-dropdown') &&
       !e.target.closest('#dash-profile-btn') && !e.target.closest('#dash-profile-dropdown') &&
+      !e.target.closest('#dash-mob-profile-dropdown') &&
       !e.target.closest('.dash-hdr-profile') && !e.target.closest('.dash-sb-footer-profile') &&
       !e.target.closest('.dash-mob-icon-btn')) {
     document.querySelectorAll('.dash-dd').forEach(function(d) { d.classList.remove('open'); });

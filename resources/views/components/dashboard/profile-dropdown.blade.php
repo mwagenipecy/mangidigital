@@ -1,5 +1,6 @@
+@props(['id' => 'dash-profile-dropdown'])
 @php $user = auth()->user(); @endphp
-<div class="dash-dd" id="dash-profile-dropdown">
+<div class="dash-dd" id="{{ $id }}">
     <div class="dash-dd-header">
         <div class="dash-dd-name">{{ $user->name ?? 'User' }}</div>
         <div class="dash-dd-email">{{ $user->email ?? '' }}</div>

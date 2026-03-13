@@ -24,123 +24,133 @@
 
 <form action="{{ route('sales.store') }}" method="POST" id="sale-form">
     @csrf
-    <div class="dash-card" style="margin-bottom:20px;">
+
+    <div class="dash-card dash-form-card">
         <div class="dash-card-header">
             <div>
                 <div class="dash-card-title">Client</div>
-                <div class="dash-card-subtitle">Select existing or enter name and phone (stored in clients)</div>
+                <div class="dash-card-subtitle">Select existing client or enter name and phone for a new client</div>
             </div>
         </div>
-        <div style="padding:0 20px 20px;">
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;">
-                <div>
-                    <label for="client_id" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Existing client (optional)</label>
-                    <select id="client_id" name="client_id" style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
+        <div class="dash-form-section">
+            <div class="dash-form-grid dash-form-grid--4">
+                <div class="dash-form-field">
+                    <label for="client_id">Existing client (optional)</label>
+                    <select id="client_id" name="client_id">
                         <option value="">— New client —</option>
                         @foreach(\App\Models\Client::where('organization_id', auth()->user()->organization?->id)->orderBy('name')->get() as $cl)
                             <option value="{{ $cl->id }}" {{ old('client_id') == $cl->id ? 'selected' : '' }}>{{ $cl->name }} — {{ $cl->phone }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div>
-                    <label for="client_name" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Client name</label>
-                    <input type="text" id="client_name" name="client_name" value="{{ old('client_name') }}" style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;" placeholder="If new client">
+                <div class="dash-form-field">
+                    <label for="client_name">Client name</label>
+                    <input type="text" id="client_name" name="client_name" value="{{ old('client_name') }}" placeholder="If new client">
                 </div>
-                <div>
-                    <label for="client_phone" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Client phone</label>
-                    <input type="text" id="client_phone" name="client_phone" value="{{ old('client_phone') }}" style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;" placeholder="Required for new client">
+                <div class="dash-form-field">
+                    <label for="client_phone">Client phone</label>
+                    <input type="text" id="client_phone" name="client_phone" value="{{ old('client_phone') }}" placeholder="Required for new client">
                 </div>
-                <div>
-                    <label for="sale_date" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Sale date *</label>
-                    <input type="date" id="sale_date" name="sale_date" value="{{ old('sale_date', date('Y-m-d')) }}" required style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
+                <div class="dash-form-field">
+                    <label for="sale_date">Sale date <span style="color:var(--dash-danger);">*</span></label>
+                    <input type="date" id="sale_date" name="sale_date" value="{{ old('sale_date', date('Y-m-d')) }}" required>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="dash-card" style="margin-bottom:20px;">
+    <div class="dash-card dash-form-card">
         <div class="dash-card-header">
             <div>
                 <div class="dash-card-title">Sale items</div>
-                <div class="dash-card-subtitle">Product (or “Other” for product not in system), store, quantity, unit price — write price for discount</div>
+                <div class="dash-card-subtitle">Product (or “Other” for product not in system), store, quantity and unit price</div>
             </div>
-            <button type="button" id="add-sale-item" class="dash-btn dash-btn-outline" style="font-size:.85rem;">Add row</button>
+            <button type="button" id="add-sale-item" class="dash-btn dash-btn-outline">Add row</button>
         </div>
-        <div style="padding:0 20px 20px;overflow-x:auto;">
-            <table class="dash-table" id="sale-items-table">
-                <thead>
-                    <tr>
-                        <th>Product / name</th>
-                        <th>Store</th>
-                        <th>Qty</th>
-                        <th>Unit price (TZS)</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody id="sale-items-tbody">
-                    <tr class="sale-item-row">
-                        <td>
-                            <select name="items[0][product_id]" class="item-product" style="width:100%;min-width:160px;padding:8px 10px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
-                                <option value="">— Other (not in system) —</option>
-                                @foreach($products as $p)
-                                    <option value="{{ $p->id }}" data-price="{{ $p->price }}">{{ $p->name }}</option>
-                                @endforeach
-                            </select>
-                            <input type="text" name="items[0][product_name_override]" class="item-name-override" style="width:100%;min-width:140px;margin-top:4px;padding:6px 10px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.85rem;display:none;" placeholder="Product name (when other)">
-                        </td>
-                        <td>
-                            <select name="items[0][store_id]" style="width:100%;min-width:120px;padding:8px 10px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
-                                <option value="">—</option>
-                                @foreach($stores as $s)
-                                    <option value="{{ $s->id }}">{{ $s->name }}</option>
-                                @endforeach
-                            </select>
-                        </td>
-                        <td><input type="number" name="items[0][quantity]" value="{{ old('items.0.quantity') }}" min="0.01" step="any" required style="width:80px;padding:8px 10px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;"></td>
-                        <td><input type="number" name="items[0][unit_price]" class="item-unit-price" value="{{ old('items.0.unit_price') }}" min="0" step="1" required style="width:110px;padding:8px 10px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;" placeholder="Price / discount"></td>
-                        <td></td>
-                    </tr>
-                </tbody>
-            </table>
-            <p style="font-size:.8rem;color:var(--dash-muted);margin-top:8px;">Use “Other” to sell a product not in the system; enter product name in the field below. Unit price can be edited for discounts.</p>
+        <div class="dash-form-section">
+            <div class="dash-sale-items-wrap">
+                <table class="dash-table" id="sale-items-table">
+                    <thead>
+                        <tr>
+                            <th class="dash-sale-item-product">Product / name</th>
+                            <th class="dash-sale-item-store">Store</th>
+                            <th class="dash-sale-item-qty">Qty</th>
+                            <th class="dash-sale-item-price">Unit price (TZS)</th>
+                            <th class="dash-sale-item-actions"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="sale-items-tbody">
+                        <tr class="sale-item-row">
+                            <td class="dash-sale-item-product">
+                                <select name="items[0][product_id]" class="item-product">
+                                    <option value="">— Other (not in system) —</option>
+                                    @foreach($products as $p)
+                                        <option value="{{ $p->id }}" data-price="{{ $p->price }}">{{ $p->name }}</option>
+                                    @endforeach
+                                </select>
+                                <input type="text" name="items[0][product_name_override]" class="item-name-override" style="margin-top:6px;display:none;" placeholder="Product name (when other)">
+                            </td>
+                            <td class="dash-sale-item-store">
+                                <select name="items[0][store_id]">
+                                    <option value="">—</option>
+                                    @foreach($stores as $s)
+                                        <option value="{{ $s->id }}">{{ $s->name }}</option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            <td class="dash-sale-item-qty"><input type="number" name="items[0][quantity]" value="{{ old('items.0.quantity') }}" min="0.01" step="any" required></td>
+                            <td class="dash-sale-item-price"><input type="number" name="items[0][unit_price]" class="item-unit-price" value="{{ old('items.0.unit_price') }}" min="0" step="1" required placeholder="Price"></td>
+                            <td class="dash-sale-item-actions"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="dash-form-hint">Use “Other” to sell a product not in the system; enter the product name in the field that appears. Unit price can be edited for discounts.</p>
         </div>
     </div>
 
-    <div class="dash-card" style="margin-bottom:20px;">
+    <div class="dash-card dash-form-card">
         <div class="dash-card-header">
             <div>
                 <div class="dash-card-title">Delivery / logistics</div>
-                <div class="dash-card-subtitle">If client requested delivery — select transport and cost</div>
+                <div class="dash-card-subtitle">Optional — select transport and cost if client requested delivery</div>
             </div>
         </div>
-        <div style="padding:0 20px 20px;">
-            <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-                <input type="checkbox" name="delivery_requested" value="1" {{ old('delivery_requested') ? 'checked' : '' }} id="delivery_requested" style="width:18px;height:18px;">
+        <div class="dash-form-section">
+            <label class="dash-form-check">
+                <input type="checkbox" name="delivery_requested" value="1" {{ old('delivery_requested') ? 'checked' : '' }} id="delivery_requested">
                 <span>Delivery requested</span>
             </label>
-            <div id="delivery-fields" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;{{ old('delivery_requested') ? '' : 'display:none;' }}">
-                <div>
-                    <label for="delivery_service_provider_id" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Transport</label>
-                    <select id="delivery_service_provider_id" name="delivery_service_provider_id" style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
+            <div id="delivery-fields" class="dash-form-grid dash-form-grid--2" style="{{ old('delivery_requested') ? '' : 'display:none;' }}">
+                <div class="dash-form-field">
+                    <label for="delivery_service_provider_id">Transport</label>
+                    <select id="delivery_service_provider_id" name="delivery_service_provider_id">
                         <option value="">— Select —</option>
                         @foreach($serviceProviders as $sp)
                             <option value="{{ $sp->id }}" {{ old('delivery_service_provider_id') == $sp->id ? 'selected' : '' }}>{{ $sp->name }} ({{ $sp->type_label }})</option>
                         @endforeach
                     </select>
                 </div>
-                <div>
-                    <label for="delivery_cost" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Delivery cost (TZS)</label>
-                    <input type="number" id="delivery_cost" name="delivery_cost" value="{{ old('delivery_cost') }}" min="0" step="1" style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;" placeholder="0">
+                <div class="dash-form-field">
+                    <label for="delivery_cost">Delivery cost (TZS)</label>
+                    <input type="number" id="delivery_cost" name="delivery_cost" value="{{ old('delivery_cost') }}" min="0" step="1" placeholder="0">
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="dash-card" style="margin-bottom:20px;">
-        <div style="padding:20px;">
-            <label for="notes" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Notes</label>
-            <textarea id="notes" name="notes" rows="2" style="width:100%;max-width:500px;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">{{ old('notes') }}</textarea>
-            <button type="submit" class="dash-btn dash-btn-brand" style="margin-top:16px;">Record sale &amp; get receipt</button>
+    <div class="dash-card dash-form-card">
+        <div class="dash-form-section">
+            <div class="dash-form-field" style="max-width:100%;">
+                <label for="notes">Notes</label>
+                <textarea id="notes" name="notes" rows="3" placeholder="Optional notes for this sale">{{ old('notes') }}</textarea>
+            </div>
+            <div class="dash-form-actions">
+                <button type="submit" class="dash-btn dash-btn-brand">
+                    <flux:icon.check class="size-4" />
+                    Record sale &amp; get receipt
+                </button>
+            </div>
         </div>
     </div>
 </form>
@@ -177,17 +187,17 @@ document.getElementById('add-sale-item').addEventListener('click', function() {
     });
     var tr = document.createElement('tr');
     tr.className = 'sale-item-row';
-    var productHtml = '<select name="items[' + idx + '][product_id]" class="item-product" style="width:100%;min-width:160px;padding:8px 10px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;"><option value="">— Other (not in system) —</option>';
+    var productHtml = '<select name="items[' + idx + '][product_id]" class="item-product"><option value="">— Other (not in system) —</option>';
     productOpts.filter(function(o) { return o.value; }).forEach(function(o) {
         productHtml += '<option value="' + o.value + '" data-price="' + (o.price || '') + '">' + o.text + '</option>';
     });
-    productHtml += '</select><input type="text" name="items[' + idx + '][product_name_override]" class="item-name-override" style="width:100%;min-width:140px;margin-top:4px;padding:6px 10px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.85rem;display:none;" placeholder="Product name (when other)">';
-    var storeHtml = '<select name="items[' + idx + '][store_id]" style="width:100%;min-width:120px;padding:8px 10px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;"><option value="">—</option>';
+    productHtml += '</select><input type="text" name="items[' + idx + '][product_name_override]" class="item-name-override" style="margin-top:6px;display:none;" placeholder="Product name (when other)">';
+    var storeHtml = '<select name="items[' + idx + '][store_id]"><option value="">—</option>';
     storeOpts.filter(function(o) { return o.value; }).forEach(function(o) {
         storeHtml += '<option value="' + o.value + '">' + o.text + '</option>';
     });
     storeHtml += '</select>';
-    tr.innerHTML = '<td>' + productHtml + '</td><td>' + storeHtml + '</td><td><input type="number" name="items[' + idx + '][quantity]" min="0.01" step="any" required style="width:80px;padding:8px 10px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;"></td><td><input type="number" name="items[' + idx + '][unit_price]" class="item-unit-price" min="0" step="1" required style="width:110px;padding:8px 10px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;"></td><td><button type="button" class="dash-btn dash-btn-outline remove-sale-item" style="padding:4px 8px;font-size:.75rem;">Remove</button></td>';
+    tr.innerHTML = '<td class="dash-sale-item-product">' + productHtml + '</td><td class="dash-sale-item-store">' + storeHtml + '</td><td class="dash-sale-item-qty"><input type="number" name="items[' + idx + '][quantity]" min="0.01" step="any" required></td><td class="dash-sale-item-price"><input type="number" name="items[' + idx + '][unit_price]" class="item-unit-price" min="0" step="1" required placeholder="Price"></td><td class="dash-sale-item-actions"><button type="button" class="dash-btn dash-btn-outline remove-sale-item" style="padding:4px 8px;font-size:.75rem;">Remove</button></td>';
     tbody.appendChild(tr);
     tr.querySelector('.item-product').addEventListener('change', function() {
         var r = this.closest('tr');
