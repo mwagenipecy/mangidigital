@@ -42,6 +42,18 @@
                 @error('type')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
             </div>
             <div>
+                <label for="product_category_id" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Category served (optional)</label>
+                <select id="product_category_id" name="product_category_id"
+                    style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
+                    <option value="">— All categories —</option>
+                    @foreach($categories as $c)
+                        <option value="{{ $c->id }}" {{ (string) old('product_category_id', $provider->product_category_id) === (string) $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                    @endforeach
+                </select>
+                <p style="margin:6px 0 0;font-size:.75rem;color:var(--dash-muted);">Limit to one category on the sale delivery filter, or leave empty for any category.</p>
+                @error('product_category_id')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
+            </div>
+            <div>
                 <label for="contact_phone" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Phone</label>
                 <input type="text" id="contact_phone" name="contact_phone" value="{{ old('contact_phone', $provider->contact_phone) }}"
                     style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">

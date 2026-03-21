@@ -23,6 +23,43 @@
             if (navbar) {
                 window.addEventListener('scroll', () => navbar.classList.toggle('shadow-[0_4px_28px_rgba(42,165,189,.14)]', window.scrollY > 60));
             }
+
+            (function landingMobileNav() {
+                const toggle = document.getElementById('landingNavToggle');
+                const panel = document.getElementById('landingMobilePanel');
+                if (!toggle || !panel) return;
+
+                const iconOpen = toggle.querySelector('.landing-nav-icon-open');
+                const iconClose = toggle.querySelector('.landing-nav-icon-close');
+
+                function setOpen(open) {
+                    panel.classList.toggle('hidden', !open);
+                    panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+                    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+                    document.body.classList.toggle('overflow-hidden', open);
+                    if (iconOpen && iconClose) {
+                        iconOpen.classList.toggle('hidden', open);
+                        iconClose.classList.toggle('hidden', !open);
+                    }
+                }
+
+                toggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = panel.classList.contains('hidden');
+                    setOpen(willOpen);
+                });
+
+                panel.querySelectorAll('[data-close-landing-nav]').forEach(function(el) {
+                    el.addEventListener('click', function() { setOpen(false); });
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && !panel.classList.contains('hidden')) {
+                        setOpen(false);
+                    }
+                });
+            })();
             const reveals = document.querySelectorAll('.reveal');
             const obs = new IntersectionObserver((entries) => {
                 entries.forEach((e, i) => {

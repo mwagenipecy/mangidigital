@@ -15,7 +15,7 @@
                     Mangi Digital is a shared management platform for businesses — track orders, manage expenses, grow sales, and keep every client payment in perfect order.
                 </p>
                 <div class="flex gap-4 flex-wrap">
-                    <a href="#pricing" class="inline-flex items-center justify-center gap-2 bg-[#2AA5BD] text-white py-4 px-9 text-[1.02rem] font-semibold rounded-2xl shadow-[0_6px_20px_rgba(42,165,189,0.32)] no-underline hover:bg-[#1d8aa0] hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(42,165,189,.42)] transition-all">Start Free Trial →</a>
+                    <a href="{{ route('register') }}" class="inline-flex items-center justify-center gap-2 bg-[#2AA5BD] text-white py-4 px-9 text-[1.02rem] font-semibold rounded-2xl shadow-[0_6px_20px_rgba(42,165,189,0.32)] no-underline hover:bg-[#1d8aa0] hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(42,165,189,.42)] transition-all">Start Free Trial →</a>
                     <a href="#how" class="inline-flex items-center justify-center gap-2 border-2 border-[#2AA5BD] bg-transparent text-[#2AA5BD] py-3.5 px-8 text-base font-semibold rounded-2xl no-underline hover:bg-[#2AA5BD] hover:text-white transition-all">See How It Works</a>
                 </div>
                 <div class="flex gap-10 mt-[52px] flex-wrap">

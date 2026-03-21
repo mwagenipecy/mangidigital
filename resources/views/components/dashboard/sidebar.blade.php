@@ -46,10 +46,9 @@
                 <span class="dash-sb-icon"><flux:icon.users class="size-5" /></span>
                 <span class="dash-sb-label">Clients</span>
             </a>
-            <a href="#" class="dash-sb-item">
+            <a href="{{ route('payments.index') }}" class="dash-sb-item {{ request()->routeIs('payments.*') ? 'active' : '' }}" wire:navigate>
                 <span class="dash-sb-icon"><flux:icon.credit-card class="size-5" /></span>
                 <span class="dash-sb-label">Payments</span>
-                <span class="dash-sb-badge warn">5</span>
             </a>
             <a href="{{ route('invoices.index') }}" class="dash-sb-item {{ request()->routeIs('invoices.*') ? 'active' : '' }}" wire:navigate>
                 <span class="dash-sb-icon"><flux:icon.document-text class="size-5" /></span>

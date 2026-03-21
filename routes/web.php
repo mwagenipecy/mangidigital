@@ -8,7 +8,9 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\CargoTrackController;
 use App\Http\Controllers\LogisticsController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SaleController;
@@ -22,6 +24,18 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [LandingController::class, 'index'])->name('home');
 Route::get('/terms', fn () => view('pages.legal.terms'))->name('terms');
 Route::get('/privacy', fn () => view('pages.legal.privacy'))->name('privacy');
+Route::get('receipts/installments/{payment}/verify', [PaymentController::class, 'verifyReceipt'])
+    ->middleware('signed')
+    ->name('payments.receipts.verify');
+
+Route::get('track-cargo', [CargoTrackController::class, 'form'])->name('cargo.track.form');
+Route::post('track-cargo', [CargoTrackController::class, 'lookup'])
+    ->middleware('throttle:20,1')
+    ->name('cargo.track.lookup');
+
+Route::get('track/cargo/{flow_token}', [CargoTrackController::class, 'show'])
+    ->middleware('throttle:60,1')
+    ->name('cargo.track');
 
 Route::middleware(['auth'])->get('pending-approval', fn () => view('pages.auth.pending-approval'))->name('pending-approval');
 
@@ -35,6 +49,8 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('stores', [StoreController::class, 'index'])->name('stores.index');
     Route::get('stores/create', [StoreController::class, 'create'])->name('stores.create');
     Route::post('stores', [StoreController::class, 'store'])->name('stores.store');
+    Route::get('stores/{store}/edit', [StoreController::class, 'edit'])->name('stores.edit');
+    Route::put('stores/{store}', [StoreController::class, 'update'])->name('stores.update');
 
     Route::get('product-categories', [ProductCategoryController::class, 'index'])->name('product-categories.index');
     Route::get('product-categories/create', [ProductCategoryController::class, 'create'])->name('product-categories.create');
@@ -43,6 +59,8 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('products', [ProductController::class, 'index'])->name('products.index');
     Route::get('products/create', [ProductController::class, 'create'])->name('products.create');
     Route::post('products', [ProductController::class, 'store'])->name('products.store');
+    Route::get('products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
+    Route::put('products/{product}', [ProductController::class, 'update'])->name('products.update');
 
     Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');
     Route::get('inventory/create', [InventoryController::class, 'create'])->name('inventory.create');
@@ -70,6 +88,11 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('clients', [ClientController::class, 'index'])->name('clients.index');
     Route::post('clients', [ClientController::class, 'store'])->name('clients.store');
     Route::get('api/clients/search', [ClientController::class, 'apiSearch'])->name('clients.api.search');
+    Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
+    Route::get('payments/{plan}', [PaymentController::class, 'show'])->name('payments.show');
+    Route::post('payments/plans', [PaymentController::class, 'storePlan'])->name('payments.plans.store');
+    Route::post('payments/installments', [PaymentController::class, 'storeInstallment'])->name('payments.installments.store');
+    Route::post('payments/{plan}/remind', [PaymentController::class, 'sendReminder'])->name('payments.remind');
 
     Route::get('sales', [SaleController::class, 'index'])->name('sales.index');
     Route::get('sales/create', [SaleController::class, 'create'])->name('sales.create');
@@ -78,7 +101,10 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('sales/{sale}/receipt', [SaleController::class, 'receipt'])->name('sales.receipt');
 
     Route::get('logistics', [LogisticsController::class, 'index'])->name('logistics.index');
-    Route::patch('logistics/{sale}/delivery-status', [LogisticsController::class, 'updateDeliveryStatus'])->name('logistics.update-status');
+    Route::get('logistics/cargo/create', [LogisticsController::class, 'createCargo'])->name('logistics.cargo.create');
+    Route::post('logistics/cargo', [LogisticsController::class, 'storeCargo'])->name('logistics.cargo.store');
+    Route::get('logistics/flow/{flow_token}', [LogisticsController::class, 'flow'])->name('logistics.flow');
+    Route::patch('logistics/flow/{flow_token}/delivery-status', [LogisticsController::class, 'updateDeliveryStatus'])->name('logistics.update-status');
 
     Route::get('stock-returns', [StockReturnController::class, 'index'])->name('stock-returns.index');
     Route::get('stock-returns/create', [StockReturnController::class, 'create'])->name('stock-returns.create');

@@ -40,6 +40,7 @@
                     <th>Address</th>
                     <th>Phone</th>
                     <th>Email</th>
+                    <th style="text-align:right;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -49,10 +50,13 @@
                     <td><span class="dash-td-sub">{{ $store->address ?? '—' }}</span></td>
                     <td><span class="dash-td-sub">{{ $store->phone ?? '—' }}</span></td>
                     <td><span class="dash-td-sub">{{ $store->email ?? '—' }}</span></td>
+                    <td style="text-align:right;">
+                        <a href="{{ route('stores.edit', $store) }}" class="dash-btn dash-btn-outline" style="padding:6px 12px;font-size:.8rem;" wire:navigate>Edit</a>
+                    </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="4" style="text-align:center;padding:24px;color:var(--dash-muted);">No stores yet. <a href="{{ route('stores.create') }}" class="text-[var(--dash-brand)]" wire:navigate>Add your first store</a></td>
+                    <td colspan="5" style="text-align:center;padding:24px;color:var(--dash-muted);">No stores yet. <a href="{{ route('stores.create') }}" class="text-[var(--dash-brand)]" wire:navigate>Add your first store</a></td>
                 </tr>
                 @endforelse
             </tbody>

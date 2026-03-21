@@ -7,9 +7,11 @@ use App\Models\Inventory;
 use App\Models\InventoryTransaction;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\ServiceProvider;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class SaleController extends Controller
@@ -35,14 +37,55 @@ class SaleController extends Controller
         if (! $organization) {
             return redirect()->route('dashboard')->with('error', __('You need an organization.'));
         }
-        $products = $organization->products()->orderBy('name')->get();
+        $categories = $organization->productCategories()->orderBy('name')->get();
+        $clients = $organization->clients()->orderBy('name')->get();
         $stores = $organization->stores()->orderBy('name')->get();
-        $serviceProviders = $organization->serviceProviders()->orderBy('type')->orderBy('name')->get();
+
+        $inventories = Inventory::query()
+            ->where('organization_id', $organization->id)
+            ->where('quantity', '>', 0)
+            ->where('is_out_of_stock', false)
+            ->with(['product.productCategory', 'store'])
+            ->get();
+
+        $saleInventoryPayload = $inventories->map(function (Inventory $inv) {
+            $product = $inv->product;
+            $unitPrice = $inv->price_per_unit !== null
+                ? (float) $inv->price_per_unit
+                : (float) ($product->price ?? 0);
+
+            return [
+                'inventory_id' => $inv->id,
+                'product_id' => $inv->product_id,
+                'product_name' => $product->name,
+                'unit' => $product->unit ?? '',
+                'category_id' => $product->product_category_id,
+                'store_id' => $inv->store_id,
+                'store_name' => $inv->store->name,
+                'qty_available' => (float) $inv->quantity,
+                'unit_price' => $unitPrice,
+            ];
+        })->values();
+
+        $serviceProvidersPayload = $organization->serviceProviders()
+            ->orderBy('type')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (ServiceProvider $p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'type' => $p->type,
+                'type_label' => $p->type_label,
+                'product_category_id' => $p->product_category_id,
+            ])
+            ->values();
 
         return view('sales.create', [
-            'products' => $products,
+            'categories' => $categories,
+            'clients' => $clients,
             'stores' => $stores,
-            'serviceProviders' => $serviceProviders,
+            'saleInventoryPayload' => $saleInventoryPayload,
+            'serviceProvidersPayload' => $serviceProvidersPayload,
         ]);
     }
 
@@ -59,6 +102,8 @@ class SaleController extends Controller
             'client_phone' => ['nullable', 'string', 'max:50'],
             'sale_date' => ['required', 'date'],
             'delivery_requested' => ['nullable', 'boolean'],
+            'delivery_scope' => ['nullable', 'in:local,international'],
+            'delivery_category_filter_id' => ['nullable', Rule::exists('product_categories', 'id')->where('organization_id', $organization->id)],
             'delivery_cost' => ['nullable', 'numeric', 'min:0'],
             'delivery_service_provider_id' => ['nullable', 'exists:service_providers,id'],
             'notes' => ['nullable', 'string', 'max:2000'],
@@ -103,6 +148,29 @@ class SaleController extends Controller
         $deliveryRequested = (bool) ($validated['delivery_requested'] ?? false);
         $deliveryCost = $deliveryRequested ? (float) ($validated['delivery_cost'] ?? 0) : 0;
         $deliveryProviderId = $deliveryRequested ? ($validated['delivery_service_provider_id'] ?? null) : null;
+
+        if ($deliveryRequested && $deliveryProviderId) {
+            $sp = ServiceProvider::where('organization_id', $organization->id)
+                ->where('id', $deliveryProviderId)
+                ->first();
+            if (! $sp) {
+                return back()->withErrors(['delivery_service_provider_id' => __('Invalid transport.')]);
+            }
+            $scope = $validated['delivery_scope'] ?? null;
+            if (! $scope) {
+                return back()->withErrors(['delivery_scope' => __('Select local or international delivery.')]);
+            }
+            if ($scope === 'local' && $sp->type !== ServiceProvider::TYPE_LOCAL_TRANSPORT) {
+                return back()->withErrors(['delivery_service_provider_id' => __('Selected transport does not match local delivery.')]);
+            }
+            if ($scope === 'international' && ! in_array($sp->type, [ServiceProvider::TYPE_INTERNATIONAL_TRANSPORT, ServiceProvider::TYPE_CLEARANCE_FORWARDING], true)) {
+                return back()->withErrors(['delivery_service_provider_id' => __('Selected transport does not match international delivery.')]);
+            }
+            $filterCat = $validated['delivery_category_filter_id'] ?? null;
+            if ($sp->product_category_id !== null && $filterCat !== null && $filterCat !== '' && (int) $filterCat !== (int) $sp->product_category_id) {
+                return back()->withErrors(['delivery_service_provider_id' => __('Selected transport does not match the category filter.')]);
+            }
+        }
 
         $subtotal = 0;
         foreach ($validated['items'] as $item) {

@@ -18,9 +18,9 @@ class CreateNewUser implements CreatesNewUsers
     use PasswordValidationRules, ProfileValidationRules;
 
     private const PLAN_PRICES = [
-        'basic' => 25000,
-        'pro' => 65000,
-        'biz' => 150000,
+        'trial' => 0,
+        'pro' => 9000,
+        'biz' => 15000,
     ];
 
     /**
@@ -36,7 +36,7 @@ class CreateNewUser implements CreatesNewUsers
             'email' => $this->emailRules(null),
             'password' => $this->passwordRules(),
             'business_name' => ['nullable', 'string', 'max:255'],
-            'plan' => ['nullable', 'string', 'in:basic,pro,biz'],
+            'plan' => ['nullable', 'string', 'in:trial,pro,biz'],
             'billing' => ['nullable', 'string', 'in:monthly,annual'],
             'payment_method' => ['nullable', 'string', 'max:50'],
         ];
@@ -53,11 +53,11 @@ class CreateNewUser implements CreatesNewUsers
             : trim(($input['first_name'] ?? '').' '.($input['last_name'] ?? ''));
 
         $businessName = $input['business_name'] ?? $name.'\'s Business';
-        $plan = $input['plan'] ?? 'pro';
+        $plan = $input['plan'] ?? 'trial';
         $billing = $input['billing'] ?? 'monthly';
-        $paymentMethod = $input['payment_method'] ?? 'card';
+        $paymentMethod = $input['payment_method'] ?? 'free_trial';
 
-        $price = self::PLAN_PRICES[$plan] ?? self::PLAN_PRICES['pro'];
+        $price = self::PLAN_PRICES[$plan] ?? self::PLAN_PRICES['trial'];
         $amount = $billing === 'annual' ? (int) round($price * 12 * 0.8) : $price;
 
         $subscriptionStart = Carbon::today();
@@ -68,6 +68,7 @@ class CreateNewUser implements CreatesNewUsers
         return DB::transaction(function () use ($input, $name, $businessName, $subscriptionStart, $subscriptionEnd, $plan, $amount, $paymentMethod) {
             $organization = Organization::create([
                 'name' => $businessName,
+                'address' => $input['business_address'] ?? null,
                 'subscription_start' => $subscriptionStart,
                 'subscription_end' => $subscriptionEnd,
                 'status' => 'active',
@@ -78,7 +79,7 @@ class CreateNewUser implements CreatesNewUsers
                 'email' => $input['email'],
                 'password' => $input['password'],
                 'organization_id' => $organization->id,
-                'status' => User::STATUS_PENDING,
+                'status' => User::STATUS_APPROVED,
             ]);
 
             Payment::create([

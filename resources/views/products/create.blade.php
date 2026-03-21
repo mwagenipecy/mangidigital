@@ -23,7 +23,7 @@
     <div class="dash-card-header">
         <div>
             <div class="dash-card-title">Product details</div>
-            <div class="dash-card-subtitle">Item you sell — name, category, price</div>
+            <div class="dash-card-subtitle">Item you sell — name, category, unit</div>
         </div>
     </div>
     <form action="{{ route('products.store') }}" method="POST" style="padding:0 20px 20px;">
@@ -53,13 +53,6 @@
                     style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;resize:vertical;"
                     placeholder="Optional">{{ old('description') }}</textarea>
                 @error('description')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label for="price" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Price (TZS) <span style="color:var(--dash-danger);">*</span></label>
-                <input type="number" id="price" name="price" value="{{ old('price') }}" min="0" step="1" required
-                    style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;"
-                    placeholder="0">
-                @error('price')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
             </div>
             <div>
                 <label for="unit" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Unit</label>

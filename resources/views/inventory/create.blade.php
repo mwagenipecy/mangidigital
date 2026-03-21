@@ -69,7 +69,7 @@
                 <label for="price_per_unit" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Price per unit (TZS)</label>
                 <input type="number" id="price_per_unit" name="price_per_unit" value="{{ old('price_per_unit') }}" min="0" step="1"
                     style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;"
-                    placeholder="Leave blank to use product price">
+                    placeholder=" product price per unit">
                 @error('price_per_unit')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
             </div>
             <div>

@@ -6,8 +6,11 @@
 <div class="dash-page-header">
     <div>
         <h1 class="dash-page-title">Logistics</h1>
-        <p class="dash-page-subtitle">Sales with delivery — products transmitted, transport used, status (arrived / received by customer)</p>
+        <p class="dash-page-subtitle">{{ __('Sale deliveries and custom cargo — same flow board and customer tracking') }}</p>
     </div>
+    <a href="{{ route('logistics.cargo.create') }}" class="dash-btn dash-btn-brand" wire:navigate>
+        {{ __('Add custom cargo') }}
+    </a>
 </div>
 
 @if(session('error'))
@@ -46,7 +49,7 @@
     <div class="dash-card" style="margin-bottom:0;padding:16px;">
         <div style="font-size:.75rem;color:var(--dash-muted);margin-bottom:4px;text-transform:uppercase;">Total</div>
         <div style="font-size:1.75rem;font-weight:700;color:var(--dash-ink);">{{ $summary['total'] }}</div>
-        <div style="font-size:.8rem;color:var(--dash-muted);margin-top:2px;">Deliveries</div>
+        <div style="font-size:.8rem;color:var(--dash-muted);margin-top:2px;">All shipments</div>
     </div>
 </div>
 
@@ -66,11 +69,11 @@
     </div>
 </form>
 
-<div class="dash-card">
+<div class="dash-card" style="margin-bottom:20px;">
     <div class="dash-card-header">
         <div>
-            <div class="dash-card-title">Deliveries</div>
-            <div class="dash-card-subtitle">All sales with delivery requested — update status when dispatched, arrived, or customer has taken</div>
+            <div class="dash-card-title">{{ __('Deliveries from sales') }}</div>
+            <div class="dash-card-subtitle">{{ __('Sales with delivery requested') }}</div>
         </div>
     </div>
     <div class="dash-table-wrap">
@@ -80,7 +83,7 @@
                     <th>Date</th>
                     <th>Receipt / Sale</th>
                     <th>Client</th>
-                    <th>Products transmitted</th>
+                    <th>Products</th>
                     <th>Transport</th>
                     <th>Status</th>
                     <th>Arrived</th>
@@ -104,27 +107,31 @@
                     <td><span class="dash-pill" style="font-size:.75rem;">{{ $sale->delivery_status_label }}</span></td>
                     <td><span class="dash-td-sub">{{ $sale->delivery_arrived_at?->format('d M H:i') ?? '—' }}</span></td>
                     <td><span class="dash-td-sub">{{ $sale->delivery_received_at ? 'Yes' : '—' }}</span></td>
-                    <td>
+                    <td style="white-space:nowrap;">
+                        @if($sale->logistics_flow_token)
+                            <a href="{{ route('logistics.flow', ['flow_token' => $sale->logistics_flow_token]) }}" target="_blank" rel="noopener noreferrer" class="dash-btn dash-btn-outline" style="padding:5px 10px;font-size:.75rem;margin-right:6px;">{{ __('View flow') }}</a>
+                        @endif
                         @php $nextStatuses = $sale->allowedNextDeliveryStatuses(); @endphp
-                        @if(count($nextStatuses) === 0)
-                            <span class="dash-pill dash-pill-green" style="font-size:.75rem;">Received</span>
-                        @else
-                            <form action="{{ route('logistics.update-status', $sale) }}" method="POST" style="display:inline;">
+                        @if(count($nextStatuses) > 0 && $sale->logistics_flow_token)
+                            <form action="{{ route('logistics.update-status', ['flow_token' => $sale->logistics_flow_token]) }}" method="POST" style="display:inline;">
                                 @csrf
                                 @method('PATCH')
-                                <select name="delivery_status" onchange="this.form.submit()" style="padding:4px 8px;font-size:.8rem;border:1px solid var(--dash-border);border-radius:4px;">
-                                    <option value="" disabled>{{ $sale->delivery_status_label }} (current)</option>
+                                <input type="hidden" name="delivery_pickup_office" value="">
+                                <select name="delivery_status" onchange="if(this.options[this.selectedIndex].dataset.needPickup === '1') { var p = prompt(@json(__('Pickup office / address (required for Arrived)'))); if(p === null) { this.value=''; return; } this.form.querySelector('input[name=delivery_pickup_office]').value = p || ''; } this.form.submit();" style="padding:4px 8px;font-size:.8rem;border:1px solid var(--dash-border);border-radius:4px;max-width:140px;">
+                                    <option value="" disabled selected>{{ $sale->delivery_status_label }}</option>
                                     @foreach($nextStatuses as $value => $label)
-                                        <option value="{{ $value }}">→ {{ $label }}</option>
+                                        <option value="{{ $value }}" data-need-pickup="{{ $value === \App\Models\Sale::DELIVERY_STATUS_ARRIVED ? '1' : '0' }}">→ {{ $label }}</option>
                                     @endforeach
                                 </select>
                             </form>
+                        @elseif(count($nextStatuses) === 0)
+                            <span class="dash-pill dash-pill-green" style="font-size:.75rem;">{{ __('Done') }}</span>
                         @endif
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="9" style="text-align:center;padding:24px;color:var(--dash-muted);">No deliveries. Sales with “Delivery requested” will appear here.</td>
+                    <td colspan="9" style="text-align:center;padding:24px;color:var(--dash-muted);">{{ __('No sale deliveries for this filter.') }}</td>
                 </tr>
                 @endforelse
             </tbody>
@@ -133,11 +140,84 @@
     @if($deliveries->hasPages())
         <div style="padding:12px 16px;border-top:1px solid var(--dash-border);display:flex;justify-content:center;gap:8px;">
             @if($deliveries->previousPageUrl())
-                <a href="{{ $deliveries->appends(request()->query())->previousPageUrl() }}" class="dash-btn dash-btn-outline" wire:navigate>&larr; Previous</a>
+                <a href="{{ $deliveries->appends(request()->except('page'))->previousPageUrl() }}" class="dash-btn dash-btn-outline" wire:navigate>&larr; Previous</a>
             @endif
             <span style="align-self:center;font-size:.85rem;color:var(--dash-muted);">Page {{ $deliveries->currentPage() }} of {{ $deliveries->lastPage() }}</span>
             @if($deliveries->nextPageUrl())
-                <a href="{{ $deliveries->appends(request()->query())->nextPageUrl() }}" class="dash-btn dash-btn-outline" wire:navigate>Next &rarr;</a>
+                <a href="{{ $deliveries->appends(request()->except('page'))->nextPageUrl() }}" class="dash-btn dash-btn-outline" wire:navigate>Next &rarr;</a>
+            @endif
+        </div>
+    @endif
+</div>
+
+<div class="dash-card">
+    <div class="dash-card-header">
+        <div>
+            <div class="dash-card-title">{{ __('Custom cargo') }}</div>
+            <div class="dash-card-subtitle">{{ __('Not linked to a sale — use “Add custom cargo” to create') }}</div>
+        </div>
+    </div>
+    <div class="dash-table-wrap">
+        <table class="dash-table">
+            <thead>
+                <tr>
+                    <th>{{ __('Reference') }}</th>
+                    <th>{{ __('Created') }}</th>
+                    <th>{{ __('Client') }}</th>
+                    <th>{{ __('Cargo') }}</th>
+                    <th>{{ __('Transport') }}</th>
+                    <th>{{ __('Status') }}</th>
+                    <th>{{ __('Actions') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($cargoShipments as $cargo)
+                <tr>
+                    <td><span class="dash-td-main">{{ $cargo->reference_number }}</span></td>
+                    <td><span class="dash-td-sub">{{ $cargo->created_at?->format('d M Y') }}</span></td>
+                    <td>
+                        <div class="dash-td-main">{{ $cargo->client_name }}</div>
+                        <div class="dash-td-sub">{{ $cargo->client_phone }}</div>
+                    </td>
+                    <td><span class="dash-td-sub">{{ \Illuminate\Support\Str::limit($cargo->cargo_description ?? '—', 48) }}</span></td>
+                    <td><span class="dash-td-sub">{{ $cargo->deliveryServiceProvider?->name ?? '—' }}</span></td>
+                    <td><span class="dash-pill" style="font-size:.75rem;">{{ $cargo->delivery_status_label }}</span></td>
+                    <td style="white-space:nowrap;">
+                        <a href="{{ route('logistics.flow', ['flow_token' => $cargo->logistics_flow_token]) }}" target="_blank" rel="noopener noreferrer" class="dash-btn dash-btn-outline" style="padding:5px 10px;font-size:.75rem;margin-right:6px;">{{ __('View flow') }}</a>
+                        @php $nextC = $cargo->allowedNextDeliveryStatuses(); @endphp
+                        @if(count($nextC) > 0)
+                            <form action="{{ route('logistics.update-status', ['flow_token' => $cargo->logistics_flow_token]) }}" method="POST" style="display:inline;">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="delivery_pickup_office" value="">
+                                <select name="delivery_status" onchange="if(this.options[this.selectedIndex].dataset.needPickup === '1') { var p = prompt(@json(__('Pickup office / address (required for Arrived)'))); if(p === null) { this.value=''; return; } this.form.querySelector('input[name=delivery_pickup_office]').value = p || ''; } this.form.submit();" style="padding:4px 8px;font-size:.8rem;border:1px solid var(--dash-border);border-radius:4px;max-width:140px;">
+                                    <option value="" disabled selected>{{ $cargo->delivery_status_label }}</option>
+                                    @foreach($nextC as $value => $label)
+                                        <option value="{{ $value }}" data-need-pickup="{{ $value === \App\Models\CargoShipment::DELIVERY_STATUS_ARRIVED ? '1' : '0' }}">→ {{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </form>
+                        @else
+                            <span class="dash-pill dash-pill-green" style="font-size:.75rem;">{{ __('Done') }}</span>
+                        @endif
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="7" style="text-align:center;padding:24px;color:var(--dash-muted);">{{ __('No custom cargo yet.') }}</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    @if($cargoShipments->hasPages())
+        <div style="padding:12px 16px;border-top:1px solid var(--dash-border);display:flex;justify-content:center;gap:8px;">
+            @if($cargoShipments->previousPageUrl())
+                <a href="{{ $cargoShipments->appends(request()->except('cargo_page'))->previousPageUrl() }}" class="dash-btn dash-btn-outline" wire:navigate>&larr; Previous</a>
+            @endif
+            <span style="align-self:center;font-size:.85rem;color:var(--dash-muted);">Page {{ $cargoShipments->currentPage() }} of {{ $cargoShipments->lastPage() }}</span>
+            @if($cargoShipments->nextPageUrl())
+                <a href="{{ $cargoShipments->appends(request()->except('cargo_page'))->nextPageUrl() }}" class="dash-btn dash-btn-outline" wire:navigate>Next &rarr;</a>
             @endif
         </div>
     @endif

@@ -12,6 +12,8 @@ class Organization extends Model
 
     protected $fillable = [
         'name',
+        'address',
+        'logo_path',
         'subscription_start',
         'subscription_end',
         'status',
@@ -80,6 +82,11 @@ class Organization extends Model
         return $this->hasMany(Sale::class);
     }
 
+    public function cargoShipments(): HasMany
+    {
+        return $this->hasMany(CargoShipment::class);
+    }
+
     public function expenseCategories(): HasMany
     {
         return $this->hasMany(ExpenseCategory::class);
@@ -98,6 +105,16 @@ class Organization extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    public function clientPaymentPlans(): HasMany
+    {
+        return $this->hasMany(ClientPaymentPlan::class);
+    }
+
+    public function clientInstallmentPayments(): HasMany
+    {
+        return $this->hasMany(ClientInstallmentPayment::class);
     }
 
     public function usersCount(): int

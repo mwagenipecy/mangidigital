@@ -31,4 +31,14 @@ class Client extends Model
     {
         return $this->hasMany(Invoice::class);
     }
+
+    public function paymentPlans(): HasMany
+    {
+        return $this->hasMany(ClientPaymentPlan::class);
+    }
+
+    public function installmentPayments(): HasMany
+    {
+        return $this->hasMany(ClientInstallmentPayment::class);
+    }
 }

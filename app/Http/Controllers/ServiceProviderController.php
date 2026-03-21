@@ -15,18 +15,21 @@ class ServiceProviderController extends Controller
         if (! $organization) {
             return redirect()->route('dashboard')->with('error', __('You need an organization.'));
         }
-        $providers = $organization->serviceProviders()->orderBy('type')->orderBy('name')->paginate(20);
+        $providers = $organization->serviceProviders()->with('productCategory')->orderBy('type')->orderBy('name')->paginate(20);
 
         return view('service-providers.index', ['providers' => $providers]);
     }
 
     public function create(): View|RedirectResponse
     {
-        if (! auth()->user()->organization) {
+        $organization = auth()->user()->organization;
+        if (! $organization) {
             return redirect()->route('dashboard')->with('error', __('You need an organization.'));
         }
 
-        return view('service-providers.create');
+        $categories = $organization->productCategories()->orderBy('name')->get();
+
+        return view('service-providers.create', ['categories' => $categories]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -39,11 +42,16 @@ class ServiceProviderController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'string', 'in:international_transport,local_transport,clearance_forwarding'],
+            'product_category_id' => ['nullable', 'exists:product_categories,id'],
             'contact_phone' => ['nullable', 'string', 'max:50'],
             'contact_email' => ['nullable', 'email', 'max:255'],
             'address' => ['nullable', 'string', 'max:500'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        if (! empty($validated['product_category_id']) && ! $organization->productCategories()->where('id', $validated['product_category_id'])->exists()) {
+            return back()->withErrors(['product_category_id' => __('Invalid category.')]);
+        }
 
         $organization->serviceProviders()->create($validated);
 
@@ -57,7 +65,12 @@ class ServiceProviderController extends Controller
             abort(404);
         }
 
-        return view('service-providers.edit', ['provider' => $serviceProvider]);
+        $categories = $organization->productCategories()->orderBy('name')->get();
+
+        return view('service-providers.edit', [
+            'provider' => $serviceProvider,
+            'categories' => $categories,
+        ]);
     }
 
     public function update(Request $request, ServiceProvider $serviceProvider): RedirectResponse
@@ -70,11 +83,16 @@ class ServiceProviderController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'string', 'in:international_transport,local_transport,clearance_forwarding'],
+            'product_category_id' => ['nullable', 'exists:product_categories,id'],
             'contact_phone' => ['nullable', 'string', 'max:50'],
             'contact_email' => ['nullable', 'email', 'max:255'],
             'address' => ['nullable', 'string', 'max:500'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        if (! empty($validated['product_category_id']) && ! $organization->productCategories()->where('id', $validated['product_category_id'])->exists()) {
+            return back()->withErrors(['product_category_id' => __('Invalid category.')]);
+        }
 
         $serviceProvider->update($validated);
 

@@ -5,17 +5,36 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Inventory extends Model
 {
     protected $fillable = [
         'organization_id',
+        'uuid',
         'product_id',
         'store_id',
         'quantity',
         'price_per_unit',
         'is_out_of_stock',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Inventory $inventory): void {
+            if (empty($inventory->uuid)) {
+                $inventory->uuid = (string) Str::uuid();
+            }
+        });
+    }
+
+    /**
+     * Public URLs use UUID so sequential IDs are not exposed.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'uuid';
+    }
 
     protected function casts(): array
     {
@@ -41,9 +60,14 @@ class Inventory extends Model
         return $this->belongsTo(Store::class);
     }
 
+    /**
+     * Oldest first — matches ledger / running balance (see inventory show).
+     */
     public function transactions(): HasMany
     {
-        return $this->hasMany(InventoryTransaction::class)->orderByDesc('created_at');
+        return $this->hasMany(InventoryTransaction::class)
+            ->orderBy('created_at')
+            ->orderBy('id');
     }
 
     public function getDisplayPriceAttribute(): string

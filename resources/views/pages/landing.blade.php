@@ -7,7 +7,7 @@
 @section('title', 'Mangi Digital — Unified Business Management')
 
 @section('content')
-    @livewire('landing.navbar')
+    <x-landing-navbar />
     @livewire('landing.hero-section')
     @livewire('landing.marquee-section')
     @livewire('landing.about-section')

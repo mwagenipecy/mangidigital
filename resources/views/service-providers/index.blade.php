@@ -38,6 +38,7 @@
                 <tr>
                     <th>Name</th>
                     <th>Type / identifier</th>
+                    <th>Category</th>
                     <th>Contact</th>
                     <th>Actions</th>
                 </tr>
@@ -55,6 +56,7 @@
                             <span class="dash-pill" style="background:#fef3c7;color:#b45309;">Clearance & forwarding</span>
                         @endif
                     </td>
+                    <td><span class="dash-td-sub">{{ $p->productCategory?->name ?? 'All' }}</span></td>
                     <td><span class="dash-td-sub">{{ $p->contact_phone ?? $p->contact_email ?? '—' }}</span></td>
                     <td style="white-space:nowrap;">
                         <a href="{{ route('service-providers.edit', $p) }}" class="dash-btn dash-btn-outline" style="padding:5px 10px;font-size:.75rem;margin-right:4px;" wire:navigate>Edit</a>
@@ -67,7 +69,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="4" style="text-align:center;padding:24px;color:var(--dash-muted);">No providers yet. <a href="{{ route('service-providers.create') }}" class="text-[var(--dash-brand)]" wire:navigate>Add clearance or transport company</a></td>
+                    <td colspan="5" style="text-align:center;padding:24px;color:var(--dash-muted);">No providers yet. <a href="{{ route('service-providers.create') }}" class="text-[var(--dash-brand)]" wire:navigate>Add clearance or transport company</a></td>
                 </tr>
                 @endforelse
             </tbody>

@@ -43,7 +43,6 @@ class ProductController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'product_category_id' => ['required', 'exists:product_categories,id'],
             'description' => ['nullable', 'string', 'max:1000'],
-            'price' => ['required', 'numeric', 'min:0'],
             'unit' => ['nullable', 'string', 'max:50'],
         ]);
 
@@ -51,8 +50,47 @@ class ProductController extends Controller
             return back()->withErrors(['product_category_id' => __('Invalid category.')]);
         }
 
+        $validated['price'] = 0;
+
         $organization->products()->create($validated);
 
         return redirect()->route('products.index')->with('success', __('Product added.'));
+    }
+
+    public function edit(Product $product): View|RedirectResponse
+    {
+        $organization = auth()->user()->organization;
+        if (! $organization || $product->organization_id !== $organization->id) {
+            return redirect()->route('products.index')->with('error', __('Product not found.'));
+        }
+        $categories = $organization->productCategories()->orderBy('name')->get();
+
+        return view('products.edit', [
+            'product' => $product,
+            'categories' => $categories,
+        ]);
+    }
+
+    public function update(Request $request, Product $product): RedirectResponse
+    {
+        $organization = auth()->user()->organization;
+        if (! $organization || $product->organization_id !== $organization->id) {
+            return redirect()->route('products.index')->with('error', __('Product not found.'));
+        }
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'product_category_id' => ['required', 'exists:product_categories,id'],
+            'description' => ['nullable', 'string', 'max:1000'],
+            'unit' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        if (! $organization->productCategories()->where('id', $validated['product_category_id'])->exists()) {
+            return back()->withErrors(['product_category_id' => __('Invalid category.')]);
+        }
+
+        $product->update($validated);
+
+        return redirect()->route('products.index')->with('success', __('Product updated.'));
     }
 }

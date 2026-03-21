@@ -3,7 +3,7 @@
 @section('title', __('Register'))
 
 @section('panel-tag')
-    <div class="account-panel-tag">✦ Step 1 of 4</div>
+    <div class="account-panel-tag">✦ Step 1 of 3</div>
 @endsection
 
 @section('panel-title')
@@ -18,8 +18,8 @@
     <div class="account-feature-list">
         <div class="account-f-item"><div class="account-f-dot">1</div>Personal details</div>
         <div class="account-f-item"><div class="account-f-dot">2</div>Business information</div>
-        <div class="account-f-item"><div class="account-f-dot">3</div>Choose your plan</div>
-        <div class="account-f-item"><div class="account-f-dot">4</div>Secure payment</div>
+        <div class="account-f-item"><div class="account-f-dot">3</div>Choose free trial and continue</div>
+        <div class="account-f-item"><div class="account-f-dot">✓</div>Instant dashboard access</div>
     </div>
 @endsection
 
@@ -36,7 +36,7 @@
     {{-- Step bar --}}
     <div class="account-step-bar">
         <div class="account-step-bar-top">
-            <div class="account-step-bar-label">Step <strong x-text="step"></strong> of <strong>4</strong></div>
+            <div class="account-step-bar-label">Step <strong x-text="step"></strong> of <strong>3</strong></div>
             <div class="account-step-bar-label" style="color:var(--brand)" x-text="stepNames[step - 1]"></div>
         </div>
         <div class="account-step-dots">
@@ -45,17 +45,14 @@
             <div class="account-s-dot" :class="{ 'done': step > 2, 'active': step === 2, 'pending': step < 2 }" x-text="step > 2 ? '✓' : 2"></div>
             <div class="account-s-line" :class="{ 'done': step > 2 }"></div>
             <div class="account-s-dot" :class="{ 'done': step > 3, 'active': step === 3, 'pending': step < 3 }" x-text="step > 3 ? '✓' : 3"></div>
-            <div class="account-s-line" :class="{ 'done': step > 3 }"></div>
-            <div class="account-s-dot" :class="{ 'done': step > 4, 'active': step === 4, 'pending': step < 4 }" x-text="step > 4 ? '✓' : 4"></div>
         </div>
         <div class="account-step-progress" style="margin-top:10px">
-            <div class="account-step-progress-fill" :style="'width:' + (step/4*100) + '%'"></div>
+            <div class="account-step-progress-fill" :style="'width:' + (step/3*100) + '%'"></div>
         </div>
         <div class="account-step-names">
             <div class="account-s-name" :class="{ 'active': step === 1, 'done': step > 1 }">Personal</div>
             <div class="account-s-name" :class="{ 'active': step === 2, 'done': step > 2 }">Business</div>
             <div class="account-s-name" :class="{ 'active': step === 3, 'done': step > 3 }">Plan</div>
-            <div class="account-s-name" :class="{ 'active': step === 4, 'done': step > 4 }">Payment</div>
         </div>
     </div>
 
@@ -243,26 +240,26 @@
         {{-- Step 3: Plan --}}
         <div x-show="step === 3" x-cloak style="display: none;">
             <h2 class="account-form-title">Choose Your Plan</h2>
-            <p class="account-form-sub">Select the plan that fits your business. You can upgrade anytime.</p>
+            <p class="account-form-sub">Free Trial is active now. Paid plans are listed but not available yet.</p>
 
             <div class="account-plan-grid">
-                <label class="account-plan-card" :class="{ 'selected': selectedPlan === 'basic' }" @click="selectedPlan = 'basic'">
-                    <input type="radio" name="plan" value="basic" :checked="selectedPlan === 'basic'">
-                    <div class="account-plan-name">Basic</div>
-                    <div class="account-plan-price">TZS 25K</div>
+                <label class="account-plan-card" :class="{ 'selected': selectedPlan === 'trial' }" @click="selectedPlan = 'trial'">
+                    <input type="radio" name="plan" value="trial" :checked="selectedPlan === 'trial'">
+                    <div class="account-plan-name">Free Trial</div>
+                    <div class="account-plan-price">TZS 0</div>
                     <div class="account-plan-period">/month</div>
                 </label>
-                <label class="account-plan-card relative" :class="{ 'selected': selectedPlan === 'pro' }" @click="selectedPlan = 'pro'">
-                    <span class="account-plan-badge-pop">Popular</span>
-                    <input type="radio" name="plan" value="pro" :checked="selectedPlan === 'pro'">
+                <label class="account-plan-card relative opacity-60 cursor-not-allowed" :class="{ 'selected': selectedPlan === 'pro' }">
+                    <span class="account-plan-badge-pop">Coming Soon</span>
+                    <input type="radio" name="plan" value="pro" :checked="selectedPlan === 'pro'" disabled>
                     <div class="account-plan-name">Professional</div>
-                    <div class="account-plan-price">TZS 65K</div>
+                    <div class="account-plan-price">TZS 9K</div>
                     <div class="account-plan-period">/month</div>
                 </label>
-                <label class="account-plan-card" :class="{ 'selected': selectedPlan === 'biz' }" @click="selectedPlan = 'biz'">
-                    <input type="radio" name="plan" value="biz" :checked="selectedPlan === 'biz'">
+                <label class="account-plan-card opacity-60 cursor-not-allowed" :class="{ 'selected': selectedPlan === 'biz' }">
+                    <input type="radio" name="plan" value="biz" :checked="selectedPlan === 'biz'" disabled>
                     <div class="account-plan-name">Business+</div>
-                    <div class="account-plan-price">TZS 150K</div>
+                    <div class="account-plan-price">TZS 15K</div>
                     <div class="account-plan-period">/month</div>
                 </label>
             </div>
@@ -276,121 +273,22 @@
                 </div>
             </div>
 
-            <div class="account-field">
-                <label for="billing">Billing Cycle</label>
-                <div class="account-input-wrap">
-                    <select id="billing" name="billing" x-model="billing" @change="updateSummary()">
-                        <option value="monthly">Monthly</option>
-                        <option value="annual">Annual (save 20%)</option>
-                    </select>
-                </div>
-            </div>
+            <input type="hidden" name="billing" value="monthly">
 
             <div class="account-summary-box">
                 <div class="account-summary-row"><span>Plan</span><span x-text="planData[selectedPlan].name"></span></div>
-                <div class="account-summary-row"><span>Billing</span><span x-text="billing === 'annual' ? 'Annual' : 'Monthly'"></span></div>
+                <div class="account-summary-row"><span>Billing</span><span>Monthly</span></div>
                 <div class="account-summary-row"><span>14-day free trial</span><span class="text-[var(--ok)]">Included</span></div>
                 <div class="account-summary-row total"><span>Due Today</span><span class="val" x-text="summaryTotal"></span></div>
             </div>
 
             <div class="flex gap-3">
                 <button type="button" class="account-btn account-btn-outline flex-1 py-3" @click="goStep(2)">← Back</button>
-                <button type="button" class="account-btn account-btn-brand flex-[2] py-3" @click="goStep(4)">Continue to Payment →</button>
+                <button type="submit" class="account-btn account-btn-brand flex-[2] py-3">Create Free Trial Account →</button>
             </div>
         </div>
-
-        {{-- Step 4: Payment --}}
-        <div x-show="step === 4" x-cloak style="display: none;">
-            <h2 class="account-form-title">Secure Payment</h2>
-            <p class="account-form-sub">Your payment is protected with 256-bit SSL encryption</p>
-
-            <div class="account-pay-methods">
-                <div class="account-pay-method" :class="{ 'selected': payMethod === 'card' }" @click="payMethod = 'card'">
-                    <span class="pm-icon"><flux:icon.credit-card class="size-5" /></span>Card
-                </div>
-                <div class="account-pay-method" :class="{ 'selected': payMethod === 'mpesa' }" @click="payMethod = 'mpesa'">
-                    <span class="pm-icon"><flux:icon.device-phone-mobile class="size-5" /></span>M-Pesa
-                </div>
-                <div class="account-pay-method" :class="{ 'selected': payMethod === 'tigo' }" @click="payMethod = 'tigo'">
-                    <span class="pm-icon"><flux:icon.device-phone-mobile class="size-5" /></span>Tigo Pesa
-                </div>
-                <div class="account-pay-method" :class="{ 'selected': payMethod === 'airtel' }" @click="payMethod = 'airtel'">
-                    <span class="pm-icon"><flux:icon.globe-europe-africa class="size-5" /></span>Airtel Money
-                </div>
-            </div>
-
-            <div x-show="payMethod === 'card'">
-                <div class="account-card-visual">
-                    <div class="account-card-chip"></div>
-                    <div class="account-card-number" x-text="cardDisplay || '•••• •••• •••• ••••'"></div>
-                    <div class="account-card-bottom">
-                        <div><div class="account-card-label">Card Holder</div><div class="account-card-value" x-text="(cardName || 'YOUR NAME').toUpperCase()"></div></div>
-                        <div><div class="account-card-label">Expires</div><div class="account-card-value" x-text="cardExp || 'MM/YY'"></div></div>
-                    </div>
-                </div>
-                <div class="account-field">
-                    <label>Card Number</label>
-                    <div class="account-input-wrap"><input type="text" name="card_number" placeholder="1234 5678 9012 3456" maxlength="19" x-model="cardNumber" @input="formatCardInput($event)"></div>
-                </div>
-                <div class="account-field">
-                    <label>Cardholder Name</label>
-                    <div class="account-input-wrap"><input type="text" name="card_name" placeholder="As on card" x-model="cardName"></div>
-                </div>
-                <div class="account-row-2">
-                    <div class="account-field">
-                        <label>Expiry (MM/YY)</label>
-                        <div class="account-input-wrap"><input type="text" name="card_exp" placeholder="MM/YY" maxlength="5" x-model="cardExp" @input="formatExpInput($event)"></div>
-                    </div>
-                    <div class="account-field">
-                        <label>CVV</label>
-                        <div class="account-input-wrap"><input type="text" name="card_cvv" placeholder="•••" maxlength="4"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div x-show="payMethod !== 'card'" x-cloak>
-                <div class="rounded-[var(--r-sm)] p-5 mb-5 text-center border border-[var(--border)] bg-[var(--brand-10)]">
-                    <flux:icon.device-phone-mobile class="size-8 mx-auto mb-2 text-[var(--brand)]" />
-                    <div class="font-bold text-[var(--ink)] mb-1" x-text="payMethod === 'mpesa' ? 'M-Pesa' : payMethod === 'tigo' ? 'Tigo Pesa' : 'Airtel Money'"></div>
-                    <div class="text-[.85rem] text-[var(--muted)]">Enter your number to receive a payment prompt</div>
-                </div>
-                <div class="account-field">
-                    <label>Mobile Number</label>
-                    <div class="account-input-wrap">
-                        <input type="tel" name="mobile_number" placeholder="0712 345 678">
-                    </div>
-                </div>
-                <p class="text-[.82rem] text-[var(--muted)] bg-[var(--border-lt)] p-3 rounded-[var(--r-sm)] border border-[var(--border-lt)]">
-                    You will receive a USSD prompt. Enter your PIN to confirm payment of <strong class="text-[var(--brand)]" x-text="summaryTotal"></strong>.
-                </p>
-            </div>
-
-            <input type="hidden" name="payment_method" x-model="payMethod">
-            <input type="hidden" name="plan" x-model="selectedPlan">
-            <input type="hidden" name="billing" x-model="billing">
-
-            <div class="account-summary-box">
-                <div class="account-summary-row"><span>Plan</span><span x-text="planData[selectedPlan].name"></span></div>
-                <div class="account-summary-row"><span>Free trial</span><span class="text-[var(--ok)]">14 days</span></div>
-                <div class="account-summary-row total"><span>Total Charged</span><span class="val" x-text="summaryTotal"></span></div>
-            </div>
-
-            <div class="account-check-row">
-                <input type="checkbox" id="save_payment" name="save_payment" value="1">
-                <label for="save_payment" class="text-[.82rem]">Save payment method for future renewals</label>
-            </div>
-
-            <div class="flex gap-3">
-                <button type="button" class="account-btn account-btn-outline flex-1 py-3" @click="goStep(3)">← Back</button>
-                <button type="submit" class="account-btn account-btn-brand flex-[2] py-3">Pay & Submit Application →</button>
-            </div>
-
-            <div class="text-center mt-4 flex justify-center gap-3 flex-wrap text-[.73rem] text-[var(--muted)]">
-                <span><flux:icon.lock-closed class="size-3.5 inline" /> SSL Secured</span>
-                <span><flux:icon.credit-card class="size-3.5 inline" /> PCI Compliant</span>
-                <span><flux:icon.shield-check class="size-3.5 inline" /> Fraud Protected</span>
-            </div>
-        </div>
+        <input type="hidden" name="payment_method" value="free_trial">
+        <input type="hidden" name="plan" x-model="selectedPlan">
     </form>
 
     <p class="text-center text-[.8rem] text-[var(--muted)] mt-6">
@@ -404,22 +302,18 @@
 function registerForm() {
     return {
         step: 1,
-        stepNames: ['Personal Details', 'Business Information', 'Choose Plan', 'Secure Payment'],
+        stepNames: ['Personal Details', 'Business Information', 'Choose Plan'],
         pw: '',
         pwLabel: 'Enter a password',
         pwStrengthClass: '',
         pwScore: 0,
         logoFile: '',
-        selectedPlan: 'pro',
+        selectedPlan: 'trial',
         billing: 'monthly',
-        payMethod: 'card',
-        cardNumber: '',
-        cardName: '',
-        cardExp: '',
         planData: {
-            basic: { name: 'Basic', price: 25000, features: ['Up to 50 clients', 'Order management', 'Basic expense tracking', 'Sales recording', 'Partial payment tracking'] },
-            pro: { name: 'Professional', price: 65000, features: ['Up to 300 clients', 'Full expense tracking + categories', 'Sales analytics & charts', 'Instalment payment plans', 'SMS payment reminders', 'Up to 3 staff accounts'] },
-            biz: { name: 'Business+', price: 150000, features: ['Unlimited clients', 'Everything in Professional', 'Inventory management', 'Full financial reports (PDF)', 'Unlimited staff accounts', 'API integrations', 'Priority 24/7 support', 'Custom branding'] }
+            trial: { name: 'Free Trial', price: 0, features: ['Up to 50 clients', 'Order management', 'Expense tracking', 'Sales recording', 'Partial payment tracking', 'Instant account approval'] },
+            pro: { name: 'Professional', price: 9000, features: ['Up to 300 clients', 'Full expense tracking + categories', 'Sales analytics & charts', 'Instalment payment plans', 'SMS payment reminders', 'Up to 3 staff accounts'] },
+            biz: { name: 'Business+', price: 15000, features: ['Unlimited clients', 'Everything in Professional', 'Inventory management', 'Full financial reports (PDF)', 'Unlimited staff accounts', 'API integrations', 'Priority 24/7 support', 'Custom branding'] }
         },
         init() {
             this.step = 1;
@@ -449,27 +343,13 @@ function registerForm() {
             this.pwStrengthClass = score <= 1 ? 'weak' : score === 2 ? 'fair' : 'good';
             this.pwLabel = ['', 'Weak', 'Fair', 'Good', 'Strong'][score];
         },
-        updateSummary() {},
         get summaryTotal() {
             const p = this.planData[this.selectedPlan];
-            const price = this.billing === 'annual' ? Math.round(p.price * 12 * 0.8) : p.price;
+            const price = p.price;
             return 'TZS ' + price.toLocaleString();
         },
-        get cardDisplay() {
-            const v = (this.cardNumber || '').replace(/\D/g, '').substring(0, 16);
-            return v ? v.replace(/(.{4})/g, '$1 ').trim() : '•••• •••• •••• ••••';
-        },
-        formatCardInput(e) {
-            let v = e.target.value.replace(/\D/g, '').substring(0, 16);
-            this.cardNumber = v.replace(/(.{4})/g, '$1 ').trim();
-        },
-        formatExpInput(e) {
-            let v = e.target.value.replace(/\D/g, '');
-            if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2, 4);
-            this.cardExp = v;
-        },
         onSubmit(e) {
-            if (this.step !== 4) { e.preventDefault(); return false; }
+            if (this.step !== 3) { e.preventDefault(); return false; }
             return true;
         }
     };

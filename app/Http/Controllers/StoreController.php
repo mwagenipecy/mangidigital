@@ -47,4 +47,33 @@ class StoreController extends Controller
 
         return redirect()->route('stores.index')->with('success', __('Store registered successfully.'));
     }
+
+    public function edit(Store $store): View|RedirectResponse
+    {
+        $organization = auth()->user()->organization;
+        if (! $organization || $store->organization_id !== $organization->id) {
+            return redirect()->route('stores.index')->with('error', __('Store not found.'));
+        }
+
+        return view('stores.edit', ['store' => $store]);
+    }
+
+    public function update(Request $request, Store $store): RedirectResponse
+    {
+        $organization = auth()->user()->organization;
+        if (! $organization || $store->organization_id !== $organization->id) {
+            return redirect()->route('stores.index')->with('error', __('Store not found.'));
+        }
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'address' => ['nullable', 'string', 'max:500'],
+            'phone' => ['nullable', 'string', 'max:50'],
+            'email' => ['nullable', 'email', 'max:255'],
+        ]);
+
+        $store->update($validated);
+
+        return redirect()->route('stores.index')->with('success', __('Store updated successfully.'));
+    }
 }

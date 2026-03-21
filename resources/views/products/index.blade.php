@@ -38,8 +38,8 @@
                 <tr>
                     <th>Name</th>
                     <th>Category</th>
-                    <th>Price</th>
                     <th>Unit</th>
+                    <th style="text-align:right;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -52,8 +52,10 @@
                         @endif
                     </td>
                     <td><span class="dash-td-sub">{{ $product->productCategory->name ?? '—' }}</span></td>
-                    <td><span class="dash-td-amount">{{ number_format($product->price, 0) }} TZS</span></td>
                     <td><span class="dash-td-sub">{{ $product->unit ?? '—' }}</span></td>
+                    <td style="text-align:right;">
+                        <a href="{{ route('products.edit', $product) }}" class="dash-btn dash-btn-outline" style="padding:6px 12px;font-size:.8rem;" wire:navigate>Edit</a>
+                    </td>
                 </tr>
                 @empty
                 <tr>

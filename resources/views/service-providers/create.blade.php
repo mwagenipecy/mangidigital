@@ -40,6 +40,17 @@
                     @error('type')<p class="dash-form-error">{{ $message }}</p>@enderror
                 </div>
                 <div class="dash-form-field">
+                    <label for="product_category_id">Category served (optional)</label>
+                    <select id="product_category_id" name="product_category_id">
+                        <option value="">— All categories —</option>
+                        @foreach($categories as $c)
+                            <option value="{{ $c->id }}" {{ (string) old('product_category_id') === (string) $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                        @endforeach
+                    </select>
+                    <p class="dash-form-hint" style="margin-top:6px;">When set, this transport appears when that category is selected on the sale delivery filter.</p>
+                    @error('product_category_id')<p class="dash-form-error">{{ $message }}</p>@enderror
+                </div>
+                <div class="dash-form-field">
                     <label for="contact_phone">Phone</label>
                     <input type="text" id="contact_phone" name="contact_phone" value="{{ old('contact_phone') }}">
                     @error('contact_phone')<p class="dash-form-error">{{ $message }}</p>@enderror

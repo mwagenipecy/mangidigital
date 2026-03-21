@@ -14,6 +14,7 @@ class ServiceProvider extends Model
 
     protected $fillable = [
         'organization_id',
+        'product_category_id',
         'name',
         'type',
         'contact_phone',
@@ -25,6 +26,11 @@ class ServiceProvider extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    public function productCategory(): BelongsTo
+    {
+        return $this->belongsTo(ProductCategory::class);
     }
 
     public function stockOrders(): HasMany

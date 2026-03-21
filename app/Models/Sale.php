@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Sale extends Model
 {
@@ -27,11 +28,21 @@ class Sale extends Model
         'delivery_dispatched_at',
         'delivery_arrived_at',
         'delivery_received_at',
+        'delivery_pickup_office',
         'total',
         'receipt_number',
         'notes',
         'created_by',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (Sale $sale): void {
+            if ($sale->delivery_requested && empty($sale->logistics_flow_token)) {
+                $sale->logistics_flow_token = (string) Str::uuid();
+            }
+        });
+    }
 
     protected function casts(): array
     {

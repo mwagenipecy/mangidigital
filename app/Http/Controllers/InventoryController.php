@@ -89,9 +89,47 @@ class InventoryController extends Controller
         if (! $organization || $inventory->organization_id !== $organization->id) {
             abort(404);
         }
-        $inventory->load(['product', 'store', 'transactions' => fn ($q) => $q->with(['user', 'fromStore', 'toStore'])]);
+        $inventory->load(['product', 'store']);
 
-        return view('inventory.show', ['inventory' => $inventory]);
+        // Must be true chronological order (relationship uses same order; no orderByDesc conflict).
+        $chronological = $inventory->transactions()
+            ->with(['user', 'fromStore', 'toStore'])
+            ->get();
+
+        // Stock before the first transaction (opening) so each line matches:
+        // IN: balance = available before + quantity | OUT: available before − quantity.
+        $netFromTransactions = 0.0;
+        foreach ($chronological as $tx) {
+            if ($tx->type === InventoryTransaction::TYPE_IN) {
+                $netFromTransactions += (float) $tx->quantity;
+            } else {
+                $netFromTransactions -= (float) $tx->quantity;
+            }
+        }
+        $running = (float) $inventory->quantity - $netFromTransactions;
+
+        $balanceAfterByTransactionId = [];
+        foreach ($chronological as $tx) {
+            if ($tx->type === InventoryTransaction::TYPE_IN) {
+                $running += (float) $tx->quantity;
+            } else {
+                $running -= (float) $tx->quantity;
+            }
+            $balanceAfterByTransactionId[$tx->id] = $running;
+        }
+
+        // Newest first in UI; balance per row is still "after this line" in time order.
+        $transactions = $chronological->sort(function ($a, $b) {
+            $cmp = ($b->created_at?->timestamp ?? 0) <=> ($a->created_at?->timestamp ?? 0);
+
+            return $cmp !== 0 ? $cmp : $b->id <=> $a->id;
+        })->values();
+
+        return view('inventory.show', [
+            'inventory' => $inventory,
+            'transactions' => $transactions,
+            'balanceAfterByTransactionId' => $balanceAfterByTransactionId,
+        ]);
     }
 
     public function update(Request $request, Inventory $inventory): RedirectResponse
