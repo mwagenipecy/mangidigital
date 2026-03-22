@@ -40,6 +40,9 @@
         <p class="muted">{{ $org?->name ?? config('app.name') }}</p>
         <h1>{{ __('Your delivery') }}</h1>
         <p class="muted">{{ __('Reference') }}: <strong>{{ $ref }}</strong></p>
+        @if($entity->public_tracking_code)
+            <p class="muted">{{ __('Tracking number') }}: <strong style="font-family:ui-monospace,monospace;letter-spacing:0.02em;">{{ $entity->formatted_public_tracking_code }}</strong></p>
+        @endif
         <p class="status">{{ $entity->delivery_status_label }}</p>
         @if($provider)
             <p class="muted">{{ __('Transport') }}: {{ $provider->name }}</p>

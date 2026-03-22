@@ -16,6 +16,7 @@ class Inventory extends Model
         'store_id',
         'quantity',
         'price_per_unit',
+        'buying_price_per_unit',
         'is_out_of_stock',
     ];
 
@@ -41,8 +42,27 @@ class Inventory extends Model
         return [
             'quantity' => 'decimal:2',
             'price_per_unit' => 'decimal:2',
+            'buying_price_per_unit' => 'decimal:2',
             'is_out_of_stock' => 'boolean',
         ];
+    }
+
+    /** Current stock value at buying cost */
+    public function getStockCostAttribute(): float
+    {
+        if ($this->buying_price_per_unit === null) {
+            return 0.0;
+        }
+
+        return (float) $this->quantity * (float) $this->buying_price_per_unit;
+    }
+
+    /** Current stock value at selling price */
+    public function getStockValueAttribute(): float
+    {
+        $price = $this->price_per_unit ?? $this->product?->price ?? 0;
+
+        return (float) $this->quantity * (float) $price;
     }
 
     public function organization(): BelongsTo

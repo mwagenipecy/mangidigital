@@ -61,12 +61,36 @@
             <div style="font-weight:600;">{{ number_format($inventory->quantity, 0) }} {{ $inventory->product->unit ?? '' }}</div>
         </div>
         <div>
-            <div style="font-size:.75rem;color:var(--dash-muted);margin-bottom:2px;">Price per unit (TZS)</div>
-            <div style="font-weight:600;">{{ $inventory->display_price ?? '—' }}</div>
+            <div style="font-size:.75rem;color:var(--dash-muted);margin-bottom:2px;">Buying price / unit</div>
+            <div style="font-weight:600;">{{ $inventory->buying_price_per_unit !== null ? number_format($inventory->buying_price_per_unit, 0) . ' TZS' : '—' }}</div>
+        </div>
+        <div>
+            <div style="font-size:.75rem;color:var(--dash-muted);margin-bottom:2px;">Selling price / unit</div>
+            <div style="font-weight:600;">{{ $inventory->display_price ?? '—' }} TZS</div>
+        </div>
+    </div>
+    @php
+        $stockCost = $inventory->stock_cost;
+        $stockValue = $inventory->stock_value;
+        $potentialProfit = $stockValue - $stockCost;
+    @endphp
+    <div style="padding:0 20px 20px;border-top:1px solid var(--dash-border);display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;padding-top:16px;">
+        <div>
+            <div style="font-size:.75rem;color:var(--dash-muted);margin-bottom:2px;">Capital invested (stock)</div>
+            <div style="font-weight:700;font-size:1.05rem;color:#b45309;">{{ $stockCost > 0 ? number_format($stockCost, 0) . ' TZS' : '—' }}</div>
+        </div>
+        <div>
+            <div style="font-size:.75rem;color:var(--dash-muted);margin-bottom:2px;">Stock value (at selling price)</div>
+            <div style="font-weight:700;font-size:1.05rem;color:#0369a1;">{{ $stockValue > 0 ? number_format($stockValue, 0) . ' TZS' : '—' }}</div>
+        </div>
+        <div>
+            <div style="font-size:.75rem;color:var(--dash-muted);margin-bottom:2px;">Potential margin</div>
+            <div style="font-weight:700;font-size:1.05rem;color:{{ $potentialProfit >= 0 ? '#15803d' : 'var(--dash-danger)' }};">{{ $stockCost > 0 ? number_format($potentialProfit, 0) . ' TZS' : '—' }}</div>
         </div>
     </div>
     <div style="padding:0 20px 20px;border-top:1px solid var(--dash-border);display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
-        <button type="button" class="dash-btn dash-btn-outline" onclick="document.getElementById('modalPrice').classList.add('show')">Update price</button>
+        <button type="button" class="dash-btn dash-btn-outline" onclick="document.getElementById('modalBuyingPrice').classList.add('show')">Update buying price</button>
+        <button type="button" class="dash-btn dash-btn-outline" onclick="document.getElementById('modalPrice').classList.add('show')">Update selling price</button>
         @if(!$inventory->is_out_of_stock)
         <button type="button" class="dash-btn" style="background:var(--dash-danger);color:white;border:none;" onclick="document.getElementById('modalOutStock').classList.add('show')">Mark out of stock</button>
         @endif
@@ -84,6 +108,32 @@
     <div style="padding:0 20px 20px;display:flex;flex-wrap:wrap;gap:10px;">
         <button type="button" class="dash-btn dash-btn-brand" onclick="document.getElementById('modalAddStock').classList.add('show')">Add stock</button>
         <button type="button" class="dash-btn" style="background:var(--dash-danger);color:white;border:none;" onclick="document.getElementById('modalRemoveStock').classList.add('show')">Remove stock</button>
+    </div>
+</div>
+
+{{-- Modal: Update buying price --}}
+<div class="dash-modal-overlay" id="modalBuyingPrice" role="dialog" aria-modal="true" aria-labelledby="modalBuyingPriceTitle" onclick="if(event.target===this) this.classList.remove('show')">
+    <div class="dash-modal-dialog" onclick="event.stopPropagation()">
+        <div class="dash-modal-header">
+            <h2 class="dash-modal-title" id="modalBuyingPriceTitle">Update buying price</h2>
+            <button type="button" class="dash-modal-close" onclick="document.getElementById('modalBuyingPrice').classList.remove('show')" aria-label="Close">&times;</button>
+        </div>
+        <div class="dash-modal-body">
+            <form action="{{ route('inventory.update', $inventory) }}" method="POST" class="js-loading-form">
+                @csrf
+                @method('PATCH')
+                <div style="margin-bottom:12px;">
+                    <label for="buying_price_modal" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Buying price per unit (TZS)</label>
+                    <input type="number" id="buying_price_modal" name="buying_price_per_unit" value="{{ $inventory->buying_price_per_unit ?? '' }}" min="0" step="1"
+                        style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;box-sizing:border-box;"
+                        placeholder="Cost you paid per unit">
+                </div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;">
+                    <button type="button" class="dash-btn dash-btn-outline" onclick="document.getElementById('modalBuyingPrice').classList.remove('show')">Cancel</button>
+                    <button type="submit" class="dash-btn dash-btn-brand js-loading-btn" data-loading-text="Saving...">Save</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 

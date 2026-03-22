@@ -13,6 +13,18 @@
         </p>
         <p style="margin:0 0 8px;font-size:14px;color:#64748b;">{{ __('Reference') }}</p>
         <p style="margin:0 0 16px;font-size:16px;font-weight:600;">{{ $referenceDisplay }}</p>
+        @if(!empty($trackingCode))
+        <div style="margin:0 0 20px;padding:14px 16px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">
+            <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.04em;">{{ __('Your tracking number') }}</p>
+            <p style="margin:0 0 10px;font-size:15px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;word-break:break-all;line-height:1.45;color:#0f172a;font-weight:600;">{{ $trackingCode }}</p>
+            <p style="margin:0 0 8px;font-size:13px;color:#64748b;line-height:1.5;">
+                {{ __('Open the tracking page, paste the number above into “Tracking number”, then click View status:') }}
+            </p>
+            <p style="margin:0;">
+                <a href="{{ $trackFormUrl }}" style="color:#0d9488;font-weight:600;text-decoration:underline;word-break:break-all;font-size:13px;">{{ $trackFormUrl }}</a>
+            </p>
+        </div>
+        @endif
         <p style="margin:0 0 8px;font-size:14px;color:#64748b;">{{ __('Current status') }}</p>
         <p style="margin:0 0 24px;font-size:18px;font-weight:700;color:#0f766e;">{{ $statusLabel }}</p>
         @if(!empty($pickupOffice))

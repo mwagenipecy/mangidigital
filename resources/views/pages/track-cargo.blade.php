@@ -9,26 +9,26 @@
         <div class="max-w-lg mx-auto">
             <h1 class="font-[family-name:var(--font-playfair)] text-3xl md:text-4xl font-black text-[#0b1f26] mb-2">{{ __('Track your cargo') }}</h1>
             <p class="text-[#6a8e99] text-[0.95rem] mb-8 leading-relaxed">
-                {{ __('Enter the tracking code from your delivery email. It is a unique ID — keep it private.') }}
+                {{ __('Enter the tracking number from your delivery email (starts with CG). It is unique and hard to guess — keep it private.') }}
             </p>
 
             @if ($errors->any())
                 <div class="mb-6 rounded-[10px] border border-red-200 bg-red-50 text-red-800 px-4 py-3 text-sm" role="alert">
-                    {{ $errors->first('flow_token') }}
+                    {{ $errors->first('tracking_number') }}
                 </div>
             @endif
 
             <form method="POST" action="{{ route('cargo.track.lookup') }}" class="space-y-5">
                 @csrf
                 <div>
-                    <label for="flow_token" class="block text-sm font-semibold text-[#1e3a44] mb-2">{{ __('Tracking code') }}</label>
+                    <label for="tracking_number" class="block text-sm font-semibold text-[#1e3a44] mb-2">{{ __('Tracking number') }}</label>
                     <input type="text"
-                           id="flow_token"
-                           name="flow_token"
-                           value="{{ old('flow_token') }}"
+                           id="tracking_number"
+                           name="tracking_number"
+                           value="{{ old('tracking_number') }}"
                            autocomplete="off"
                            spellcheck="false"
-                           placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                           placeholder="CG-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX"
                            class="w-full px-4 py-3.5 rounded-[10px] border border-black/10 bg-white text-[#0b1f26] text-[0.95rem] font-mono tracking-tight placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#2AA5BD]/40 focus:border-[#2AA5BD]"
                            required>
                 </div>

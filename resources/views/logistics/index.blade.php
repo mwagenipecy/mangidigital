@@ -117,7 +117,7 @@
                                 @csrf
                                 @method('PATCH')
                                 <input type="hidden" name="delivery_pickup_office" value="">
-                                <select name="delivery_status" onchange="if(this.options[this.selectedIndex].dataset.needPickup === '1') { var p = prompt(@json(__('Pickup office / address (required for Arrived)'))); if(p === null) { this.value=''; return; } this.form.querySelector('input[name=delivery_pickup_office]').value = p || ''; } this.form.submit();" style="padding:4px 8px;font-size:.8rem;border:1px solid var(--dash-border);border-radius:4px;max-width:140px;">
+                                <select name="delivery_status" onchange="if(this.options[this.selectedIndex].dataset.needPickup === '1') { var p = prompt(@json(__('Pickup office / address (optional — leave empty to skip)'))); if(p === null) { this.value=''; return; } this.form.querySelector('input[name=delivery_pickup_office]').value = p != null ? p : ''; } this.form.submit();" style="padding:4px 8px;font-size:.8rem;border:1px solid var(--dash-border);border-radius:4px;max-width:140px;">
                                     <option value="" disabled selected>{{ $sale->delivery_status_label }}</option>
                                     @foreach($nextStatuses as $value => $label)
                                         <option value="{{ $value }}" data-need-pickup="{{ $value === \App\Models\Sale::DELIVERY_STATUS_ARRIVED ? '1' : '0' }}">→ {{ $label }}</option>
@@ -190,7 +190,7 @@
                                 @csrf
                                 @method('PATCH')
                                 <input type="hidden" name="delivery_pickup_office" value="">
-                                <select name="delivery_status" onchange="if(this.options[this.selectedIndex].dataset.needPickup === '1') { var p = prompt(@json(__('Pickup office / address (required for Arrived)'))); if(p === null) { this.value=''; return; } this.form.querySelector('input[name=delivery_pickup_office]').value = p || ''; } this.form.submit();" style="padding:4px 8px;font-size:.8rem;border:1px solid var(--dash-border);border-radius:4px;max-width:140px;">
+                                <select name="delivery_status" onchange="if(this.options[this.selectedIndex].dataset.needPickup === '1') { var p = prompt(@json(__('Pickup office / address (optional — leave empty to skip)'))); if(p === null) { this.value=''; return; } this.form.querySelector('input[name=delivery_pickup_office]').value = p != null ? p : ''; } this.form.submit();" style="padding:4px 8px;font-size:.8rem;border:1px solid var(--dash-border);border-radius:4px;max-width:140px;">
                                     <option value="" disabled selected>{{ $cargo->delivery_status_label }}</option>
                                     @foreach($nextC as $value => $label)
                                         <option value="{{ $value }}" data-need-pickup="{{ $value === \App\Models\CargoShipment::DELIVERY_STATUS_ARRIVED ? '1' : '0' }}">→ {{ $label }}</option>

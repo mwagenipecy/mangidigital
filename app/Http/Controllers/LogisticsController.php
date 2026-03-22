@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Jobs\SendCargoDeliveryStatusEmailJob;
 use App\Models\CargoShipment;
 use App\Models\Sale;
-use App\Models\ServiceProvider;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -178,17 +177,6 @@ class LogisticsController extends Controller
             'delivery_pickup_office' => ['nullable', 'string', 'max:5000'],
         ]);
 
-        $validator->after(function ($v) use ($request) {
-            if ($request->input('delivery_status') === Sale::DELIVERY_STATUS_ARRIVED) {
-                if (strlen(trim((string) $request->input('delivery_pickup_office', ''))) < 3) {
-                    $v->errors()->add(
-                        'delivery_pickup_office',
-                        __('Please enter the pickup office or address where the customer can collect the cargo.')
-                    );
-                }
-            }
-        });
-
         try {
             $validator->validate();
         } catch (ValidationException $e) {
@@ -204,7 +192,9 @@ class LogisticsController extends Controller
 
         $validated = $validator->validated();
         $status = $validated['delivery_status'];
-        $pickup = isset($validated['delivery_pickup_office']) ? trim((string) $validated['delivery_pickup_office']) : '';
+        $pickupRaw = $validated['delivery_pickup_office'] ?? null;
+        $pickup = is_string($pickupRaw) ? trim($pickupRaw) : '';
+        $pickupOrNull = $pickup !== '' ? $pickup : null;
 
         $model->delivery_status = $status;
         if ($status === Sale::DELIVERY_STATUS_IN_TRANSIT && ! $model->delivery_dispatched_at) {
@@ -212,7 +202,7 @@ class LogisticsController extends Controller
         }
         if ($status === Sale::DELIVERY_STATUS_ARRIVED) {
             $model->delivery_arrived_at = $model->delivery_arrived_at ?? now();
-            $model->delivery_pickup_office = $pickup;
+            $model->delivery_pickup_office = $pickupOrNull;
         }
         if ($status === Sale::DELIVERY_STATUS_RECEIVED) {
             $model->delivery_received_at = now();

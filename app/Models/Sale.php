@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\GeneratesPublicTrackingCode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,9 +10,14 @@ use Illuminate\Support\Str;
 
 class Sale extends Model
 {
+    use GeneratesPublicTrackingCode;
+
     public const DELIVERY_STATUS_PENDING = 'pending';
+
     public const DELIVERY_STATUS_IN_TRANSIT = 'in_transit';
+
     public const DELIVERY_STATUS_ARRIVED = 'arrived';
+
     public const DELIVERY_STATUS_RECEIVED = 'received';
 
     protected $fillable = [
@@ -38,8 +44,13 @@ class Sale extends Model
     protected static function booted(): void
     {
         static::saving(function (Sale $sale): void {
-            if ($sale->delivery_requested && empty($sale->logistics_flow_token)) {
-                $sale->logistics_flow_token = (string) Str::uuid();
+            if ($sale->delivery_requested) {
+                if (empty($sale->logistics_flow_token)) {
+                    $sale->logistics_flow_token = (string) Str::uuid();
+                }
+                if (empty($sale->public_tracking_code)) {
+                    $sale->public_tracking_code = Sale::generateUniquePublicTrackingCode();
+                }
             }
         });
     }
@@ -129,6 +140,7 @@ class Sale extends Model
         foreach ($nexts as $v) {
             $out[$v] = $labels[$v] ?? $v;
         }
+
         return $out;
     }
 }

@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\GeneratesPublicTrackingCode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 class CargoShipment extends Model
 {
+    use GeneratesPublicTrackingCode;
+
     public const DELIVERY_STATUS_PENDING = 'pending';
 
     public const DELIVERY_STATUS_IN_TRANSIT = 'in_transit';
@@ -40,6 +43,9 @@ class CargoShipment extends Model
             if (empty($shipment->logistics_flow_token)) {
                 $shipment->logistics_flow_token = (string) Str::uuid();
             }
+            if (empty($shipment->public_tracking_code)) {
+                $shipment->public_tracking_code = static::generateUniquePublicTrackingCode();
+            }
             if (empty($shipment->reference_number) && $shipment->organization_id) {
                 $shipment->reference_number = static::nextReferenceForOrganization((int) $shipment->organization_id);
             }
@@ -59,18 +65,18 @@ class CargoShipment extends Model
     public static function nextReferenceForOrganization(int $organizationId): string
     {
         $year = date('Y');
-        $prefix = 'CGO-' . $year . '-';
+        $prefix = 'CGO-'.$year.'-';
         $last = static::query()
             ->where('organization_id', $organizationId)
-            ->where('reference_number', 'like', $prefix . '%')
+            ->where('reference_number', 'like', $prefix.'%')
             ->orderByDesc('id')
             ->value('reference_number');
         $num = 1;
-        if ($last && preg_match('/' . preg_quote($prefix, '/') . '(\d+)/', $last, $m)) {
+        if ($last && preg_match('/'.preg_quote($prefix, '/').'(\d+)/', $last, $m)) {
             $num = (int) $m[1] + 1;
         }
 
-        return $prefix . str_pad((string) $num, 5, '0', STR_PAD_LEFT);
+        return $prefix.str_pad((string) $num, 5, '0', STR_PAD_LEFT);
     }
 
     public function organization(): BelongsTo

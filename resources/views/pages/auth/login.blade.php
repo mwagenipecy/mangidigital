@@ -46,8 +46,12 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('login') }}" class="space-y-5">
+    <form method="POST" action="{{ route('login') }}" class="space-y-5" id="login-form">
         @csrf
+        {{-- Optional: filled by JS if the browser grants location (sign-in notification email) --}}
+        <input type="hidden" name="login_geo_lat" id="login_geo_lat" value="">
+        <input type="hidden" name="login_geo_lng" id="login_geo_lng" value="">
+        <input type="hidden" name="login_geo_accuracy" id="login_geo_accuracy" value="">
 
         <div class="account-field">
             <label for="email">Email Address <span class="req">*</span></label>
@@ -97,4 +101,28 @@
         <a href="{{ route('register') }}" class="text-[var(--brand)]" wire:navigate>Create one free →</a>
     </p>
 </div>
+
+@push('account-scripts')
+<script>
+(function () {
+    if (!navigator.geolocation) return;
+    var latEl = document.getElementById('login_geo_lat');
+    var lngEl = document.getElementById('login_geo_lng');
+    var accEl = document.getElementById('login_geo_accuracy');
+    if (!latEl || !lngEl || !accEl) return;
+    navigator.geolocation.getCurrentPosition(
+        function (pos) {
+            latEl.value = pos.coords.latitude.toFixed(6);
+            lngEl.value = pos.coords.longitude.toFixed(6);
+            if (typeof pos.coords.accuracy === 'number' && isFinite(pos.coords.accuracy)) {
+                accEl.value = String(Math.round(pos.coords.accuracy));
+            }
+        },
+        function () { /* user denied or timeout — IP-only location in email */ },
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+    );
+})();
+</script>
+@endpush
 @endsection
+

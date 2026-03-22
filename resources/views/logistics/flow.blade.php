@@ -13,6 +13,8 @@
         Sale::DELIVERY_STATUS_RECEIVED => __('Received by customer'),
     ];
     $flowTitleRef = $isSale ? ($shipment->receipt_number ?? '#' . $shipment->id) : $shipment->reference_number;
+    $pickupOfficeRaw = $shipment->delivery_pickup_office ?? '';
+    $hasPickupOffice = is_string($pickupOfficeRaw) && strlen(trim($pickupOfficeRaw)) > 0;
 @endphp
 
 @section('title', __('Cargo flow') . ' — ' . $flowTitleRef)
@@ -25,23 +27,11 @@
             {{ __('Back to logistics') }}
         </a>
         <h1 class="dash-page-title">{{ __('Cargo flow') }}</h1>
-        <p class="dash-page-subtitle">{{ __('Drag forward only. When moving to Arrived, enter the pickup office — it is emailed to the customer.') }}</p>
+        <p class="dash-page-subtitle">{{ __('Drag forward only. When you move to Arrived, a dialog opens so you can add pickup details (optional).') }}</p>
     </div>
 </div>
 
 <div id="logistics-flow-flash" class="dash-card" style="display:none;margin-bottom:16px;padding:12px 16px;"></div>
-
-@if($shipment->delivery_pickup_office)
-<div id="js-flow-pickup-banner" class="dash-card" style="margin-bottom:16px;border-color:#5eead4;background:#f0fdfa;">
-    <div style="font-size:.75rem;font-weight:700;color:#0f766e;text-transform:uppercase;margin-bottom:6px;">{{ __('Pickup office') }}</div>
-    <div id="js-flow-pickup-text" style="font-size:.95rem;color:#134e4a;white-space:pre-wrap;">{{ $shipment->delivery_pickup_office }}</div>
-</div>
-@else
-<div id="js-flow-pickup-banner" class="dash-card" style="display:none;margin-bottom:16px;border-color:#5eead4;background:#f0fdfa;">
-    <div style="font-size:.75rem;font-weight:700;color:#0f766e;text-transform:uppercase;margin-bottom:6px;">{{ __('Pickup office') }}</div>
-    <div id="js-flow-pickup-text" style="font-size:.95rem;color:#134e4a;white-space:pre-wrap;"></div>
-</div>
-@endif
 
 <div class="dash-card" style="margin-bottom:16px;">
     <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;justify-content:space-between;">
@@ -78,6 +68,31 @@
             @else
                 {{ $shipment->cargo_description ?: '—' }}
             @endif
+        </div>
+    </div>
+</div>
+
+{{-- Pickup location: after shipment context so it reads naturally --}}
+<div id="js-flow-pickup-banner" class="logistics-pickup-spotlight @if($hasPickupOffice) is-visible @endif" aria-live="polite">
+    <div class="logistics-pickup-spotlight__rail" aria-hidden="true"></div>
+    <div class="logistics-pickup-spotlight__inner">
+        <div class="logistics-pickup-spotlight__icon-wrap" aria-hidden="true">
+            <flux:icon.map-pin class="size-6 shrink-0 text-teal-700" />
+        </div>
+        <div class="logistics-pickup-spotlight__meta">
+            <div class="logistics-pickup-spotlight__badge">
+                <flux:icon.building-office-2 class="size-3.5 shrink-0" />
+                {{ __('Customer pickup') }}
+            </div>
+            <h2 class="logistics-pickup-spotlight__title">{{ __('Where to collect this cargo') }}</h2>
+            <p class="logistics-pickup-spotlight__hint">{{ __('This address is emailed to the customer and shown on the public tracking page.') }}</p>
+            <div class="logistics-pickup-spotlight__address-wrap">
+                <div id="js-flow-pickup-text" class="logistics-pickup-spotlight__address">{{ $hasPickupOffice ? $pickupOfficeRaw : '' }}</div>
+                <button type="button" id="js-flow-pickup-copy" class="logistics-pickup-spotlight__copy dash-btn dash-btn-outline" title="{{ __('Copy address') }}">
+                    <flux:icon.clipboard-document-list class="size-4 shrink-0" />
+                    <span>{{ __('Copy') }}</span>
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -138,7 +153,7 @@
 </div>
 
 <p style="margin-top:16px;font-size:.85rem;color:var(--dash-muted);max-width:720px;">
-    {{ __('Arrived requires a pickup office (address or branch name). It is included in the customer email and on the public tracking page.') }}
+    {{ __('Moving to Arrived opens a dialog. Pickup office or address is optional; if you add it, it is included in the customer email and on tracking.') }}
 </p>
 
 <div id="js-flow-advance-wrap" class="dash-card" style="margin-top:16px;{{ count($allowedNext) ? '' : 'display:none;' }}">
@@ -150,16 +165,31 @@
     </div>
 </div>
 
-{{-- Pickup office modal (Arrived) --}}
-<div id="pickup-office-modal" class="hidden fixed inset-0 z-[300] flex items-center justify-center p-4" style="background:rgba(15,23,42,.45);" aria-hidden="true">
-    <div class="dash-card" style="max-width:420px;width:100%;margin:0;position:relative;">
-        <h3 class="dash-card-title" style="font-size:1rem;margin-bottom:8px;">{{ __('Pickup office / address') }}</h3>
-        <p style="font-size:.85rem;color:var(--dash-muted);margin:0 0 12px;">{{ __('Where should the customer collect the cargo? This will be emailed and shown on tracking.') }}</p>
-        <textarea id="pickup-office-input" rows="4" class="dash-input" style="width:100%;padding:10px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;resize:vertical;" placeholder="{{ __('e.g. Mangi Digital — Kimara office, Plot 12, ...') }}"></textarea>
-        <p id="pickup-office-modal-error" style="display:none;margin:8px 0 0;font-size:.8rem;color:var(--dash-danger);"></p>
-        <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
-            <button type="button" id="pickup-office-cancel" class="dash-btn dash-btn-outline">{{ __('Cancel') }}</button>
-            <button type="button" id="pickup-office-confirm" class="dash-btn dash-btn-brand">{{ __('Confirm') }}</button>
+{{-- Pickup modal: portaled-style fixed overlay (must not use Tailwind "relative" on same node as "fixed" — breaks viewport lock; "hidden"+"flex" can leave modal visible in flow) --}}
+<div id="pickup-office-modal" class="logistics-pickup-modal-root" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="pickup-office-modal-title">
+    <div id="pickup-office-modal-backdrop" class="logistics-pickup-modal__backdrop" aria-hidden="true"></div>
+    <div class="logistics-pickup-modal__panel dash-card" onclick="event.stopPropagation();">
+        <div class="logistics-pickup-modal__hero">
+            <div class="logistics-pickup-modal__hero-icon" aria-hidden="true">
+                <flux:icon.map-pin class="size-6 text-teal-800" />
+            </div>
+            <div>
+                <h3 id="pickup-office-modal-title" class="logistics-pickup-modal__hero-title">{{ __('Mark as arrived') }}</h3>
+                <p class="logistics-pickup-modal__hero-sub">{{ __('Add where the customer can collect the cargo if you know it — or continue without. Either way the status updates and the customer is notified.') }}</p>
+            </div>
+        </div>
+        <div class="logistics-pickup-modal__body">
+            <label for="pickup-office-input" class="logistics-pickup-modal__label">{{ __('Pickup office / address') }} <span class="logistics-pickup-modal__optional">({{ __('optional') }})</span></label>
+            <p class="logistics-pickup-modal__field-hint">{{ __('Shown in email and tracking when provided.') }}</p>
+            <textarea id="pickup-office-input" rows="5" class="logistics-pickup-modal__textarea dash-input" placeholder="{{ __('e.g. Mangi Digital — Kimara office, Plot 12, Open Mon–Sat 9:00–18:00') }}" autocomplete="street-address"></textarea>
+            <p id="pickup-office-modal-error" class="logistics-pickup-modal__error" style="display:none;"></p>
+            <div class="logistics-pickup-modal__actions logistics-pickup-modal__actions--split">
+                <button type="button" id="pickup-office-cancel" class="dash-btn dash-btn-outline">{{ __('Cancel') }}</button>
+                <div class="logistics-pickup-modal__actions-primary">
+                    <button type="button" id="pickup-office-skip" class="dash-btn dash-btn-outline">{{ __('No pickup details') }}</button>
+                    <button type="button" id="pickup-office-confirm" class="dash-btn dash-btn-brand">{{ __('Mark as arrived') }}</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -180,6 +210,13 @@
 
     let pickupResolve = null;
 
+    function onPickupModalKeydown(e) {
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            closePickupModal(false);
+        }
+    }
+
     function showFlash(msg, isError) {
         if (!flashEl) return;
         flashEl.style.display = 'block';
@@ -196,16 +233,19 @@
             if (pickupInput) pickupInput.value = '';
             if (pickupModalErr) { pickupModalErr.style.display = 'none'; pickupModalErr.textContent = ''; }
             if (pickupModal) {
-                pickupModal.classList.remove('hidden');
+                pickupModal.classList.add('is-open');
                 pickupModal.setAttribute('aria-hidden', 'false');
             }
             document.body.classList.add('overflow-hidden');
+            document.addEventListener('keydown', onPickupModalKeydown);
+            setTimeout(function() { if (pickupInput) pickupInput.focus(); }, 60);
         });
     }
 
     function closePickupModal(result) {
+        document.removeEventListener('keydown', onPickupModalKeydown);
         if (pickupModal) {
-            pickupModal.classList.add('hidden');
+            pickupModal.classList.remove('is-open');
             pickupModal.setAttribute('aria-hidden', 'true');
         }
         document.body.classList.remove('overflow-hidden');
@@ -216,19 +256,30 @@
         }
     }
 
+    document.getElementById('pickup-office-modal-backdrop')?.addEventListener('click', function() {
+        closePickupModal(false);
+    });
+
     document.getElementById('pickup-office-cancel')?.addEventListener('click', function() {
         closePickupModal(false);
     });
+
+    document.getElementById('pickup-office-skip')?.addEventListener('click', function() {
+        if (pickupModalErr) { pickupModalErr.style.display = 'none'; pickupModalErr.textContent = ''; }
+        closePickupModal(null);
+    });
+
     document.getElementById('pickup-office-confirm')?.addEventListener('click', function() {
-        var v = (pickupInput && pickupInput.value) ? pickupInput.value.trim() : '';
-        if (v.length < 3) {
+        if (pickupModalErr) { pickupModalErr.style.display = 'none'; pickupModalErr.textContent = ''; }
+        var raw = pickupInput ? pickupInput.value.trim() : '';
+        if (raw.length > 5000) {
             if (pickupModalErr) {
-                pickupModalErr.textContent = @json(__('Please enter at least a few characters for the pickup location.'));
+                pickupModalErr.textContent = @json(__('Pickup details are too long (max 5000 characters).'));
                 pickupModalErr.style.display = 'block';
             }
             return;
         }
-        closePickupModal(v);
+        closePickupModal(raw === '' ? null : raw);
     });
 
     function columnForStatus(status) {
@@ -307,21 +358,49 @@
     function updatePickupBanner(text) {
         if (!text || !pickupBanner || !pickupTextEl) return;
         pickupTextEl.textContent = text;
-        pickupBanner.style.display = 'block';
+        pickupBanner.classList.add('is-visible');
     }
+
+    function syncPickupBannerFromResponse(pickup) {
+        if (!pickupBanner || !pickupTextEl) return;
+        var t = pickup != null ? String(pickup).trim() : '';
+        if (t) {
+            pickupTextEl.textContent = t;
+            pickupBanner.classList.add('is-visible');
+        } else {
+            pickupTextEl.textContent = '';
+            pickupBanner.classList.remove('is-visible');
+        }
+    }
+
+    document.getElementById('js-flow-pickup-copy')?.addEventListener('click', function() {
+        var t = pickupTextEl && pickupTextEl.textContent ? pickupTextEl.textContent.trim() : '';
+        if (!t) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(t).then(function() {
+                showFlash(@json(__('Address copied to clipboard.')), false);
+            }).catch(function() {
+                showFlash(@json(__('Could not copy. Select the text manually.')), true);
+            });
+        } else {
+            showFlash(@json(__('Could not copy. Select the text manually.')), true);
+        }
+    });
 
     async function advanceTo(targetStatus) {
         if (!isDropAllowed(targetStatus)) {
             showFlash(@json(__('You cannot move backward or skip invalid steps.')), true);
             return;
         }
-        var pickupOffice = null;
+        var pickupOffice = undefined;
         if (targetStatus === STATUS_ARRIVED) {
             pickupOffice = await openPickupModal();
             if (pickupOffice === false) return;
         }
         var body = { delivery_status: targetStatus };
-        if (pickupOffice) body.delivery_pickup_office = pickupOffice;
+        if (targetStatus === STATUS_ARRIVED) {
+            body.delivery_pickup_office = pickupOffice != null && pickupOffice !== '' ? pickupOffice : null;
+        }
         try {
             var res = await fetch(updateUrl, {
                 method: 'PATCH',
@@ -344,9 +423,7 @@
             }
             allowedNext = data.allowed_next || [];
             var newStatus = data.delivery_status;
-            if (data.delivery_pickup_office) {
-                updatePickupBanner(data.delivery_pickup_office);
-            }
+            syncPickupBannerFromResponse(data.delivery_pickup_office);
             if (card) {
                 card.setAttribute('data-current-status', newStatus);
                 card.draggable = allowedNext.length > 0;
@@ -416,8 +493,264 @@
 })();
 </script>
 <style>
+/* Pickup spotlight (saved pickup location) */
+.logistics-pickup-spotlight {
+    display: none;
+    margin-bottom: 20px;
+    border-radius: 14px;
+    border: 1px solid rgba(13, 148, 136, 0.22);
+    background: linear-gradient(125deg, rgba(236, 253, 245, 0.97) 0%, rgba(255, 255, 255, 0.92) 42%, rgba(204, 251, 241, 0.55) 100%);
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 12px 40px -12px rgba(13, 148, 136, 0.18);
+    overflow: hidden;
+    align-items: stretch;
+}
+.logistics-pickup-spotlight.is-visible {
+    display: flex;
+}
+.logistics-pickup-spotlight__rail {
+    width: 5px;
+    flex-shrink: 0;
+    background: linear-gradient(180deg, #2dd4bf, #0d9488 55%, #0f766e);
+}
+.logistics-pickup-spotlight__inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px 24px;
+    padding: 20px 22px;
+    align-items: flex-start;
+    flex: 1;
+    min-width: 0;
+}
+.logistics-pickup-spotlight__icon-wrap {
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(13, 148, 136, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #0f766e;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.08);
+}
+.logistics-pickup-spotlight__meta {
+    flex: 1;
+    min-width: min(100%, 220px);
+}
+.logistics-pickup-spotlight__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #0f766e;
+    background: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(13, 148, 136, 0.2);
+    padding: 5px 11px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+}
+.logistics-pickup-spotlight__title {
+    margin: 0 0 6px;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--dash-ink, #0f172a);
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+}
+.logistics-pickup-spotlight__hint {
+    margin: 0 0 14px;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--dash-muted, #64748b);
+    max-width: 36rem;
+}
+.logistics-pickup-spotlight__address-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-start;
+}
+.logistics-pickup-spotlight__address {
+    flex: 1;
+    min-width: min(100%, 200px);
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: #134e4a;
+    white-space: pre-wrap;
+    word-break: break-word;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(13, 148, 136, 0.14);
+    border-radius: 10px;
+}
+.logistics-pickup-spotlight__copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    font-size: 0.8125rem;
+    flex-shrink: 0;
+}
+
+/* Pickup modal — viewport-fixed overlay (above dash sidebar 200 / overlay 450) */
+.logistics-pickup-modal-root {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 2100;
+    margin: 0;
+    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+}
+.logistics-pickup-modal-root.is-open {
+    display: flex;
+}
+.logistics-pickup-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: rgba(15, 23, 42, 0.52);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    cursor: pointer;
+}
+.logistics-pickup-modal__panel {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 440px;
+    max-height: min(90vh, calc(100dvh - 32px));
+    overflow-x: hidden;
+    overflow-y: auto;
+    margin: 0;
+    flex-shrink: 0;
+    border: 1px solid rgba(13, 148, 136, 0.22);
+    box-shadow:
+        0 25px 50px -12px rgba(15, 23, 42, 0.28),
+        0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+    -webkit-overflow-scrolling: touch;
+}
+.logistics-pickup-modal__hero {
+    display: flex;
+    gap: 16px;
+    padding: 20px 22px;
+    background: linear-gradient(145deg, #ecfdf5 0%, #d1fae5 50%, #ccfbf1 100%);
+    border-bottom: 1px solid rgba(13, 148, 136, 0.14);
+    align-items: flex-start;
+}
+.logistics-pickup-modal__hero-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(13, 148, 136, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.logistics-pickup-modal__hero-title {
+    margin: 0 0 6px;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--dash-ink, #0f172a);
+    line-height: 1.3;
+}
+.logistics-pickup-modal__hero-sub {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    color: var(--dash-muted, #64748b);
+}
+.logistics-pickup-modal__body {
+    padding: 20px 22px 22px;
+    background: var(--dash-surface, #fff);
+}
+.logistics-pickup-modal__label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--dash-muted, #64748b);
+    margin-bottom: 8px;
+}
+.logistics-pickup-modal__textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--dash-border, #e2e8f0);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    resize: vertical;
+    min-height: 128px;
+    font-family: inherit;
+}
+.logistics-pickup-modal__textarea:focus {
+    outline: none;
+    border-color: #0d9488;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.2);
+}
+.logistics-pickup-modal__error {
+    margin: 10px 0 0;
+    font-size: 0.8125rem;
+    color: var(--dash-danger, #dc2626);
+}
+.logistics-pickup-modal__actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 18px;
+    flex-wrap: wrap;
+}
+.logistics-pickup-modal__optional {
+    font-weight: 500;
+    color: var(--dash-muted, #64748b);
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.85em;
+}
+.logistics-pickup-modal__field-hint {
+    margin: -2px 0 10px;
+    font-size: 0.8125rem;
+    color: var(--dash-muted, #64748b);
+    line-height: 1.45;
+}
+.logistics-pickup-modal__actions--split {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+}
+.logistics-pickup-modal__actions-primary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
+}
+@media (min-width: 520px) {
+    .logistics-pickup-modal__actions--split {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .logistics-pickup-modal__actions-primary {
+        flex: 1;
+        justify-content: flex-end;
+    }
+}
+
 @media (max-width: 900px) {
     .logistics-flow-board { grid-template-columns: 1fr !important; }
+    .logistics-pickup-spotlight__inner { padding: 16px 18px; }
 }
 </style>
 @endsection

@@ -66,10 +66,17 @@
                 @error('quantity')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
             </div>
             <div>
-                <label for="price_per_unit" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Price per unit (TZS)</label>
+                <label for="buying_price_per_unit" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Buying price per unit (TZS) <span style="font-weight:400;color:var(--dash-muted);">— cost</span></label>
+                <input type="number" id="buying_price_per_unit" name="buying_price_per_unit" value="{{ old('buying_price_per_unit') }}" min="0" step="1"
+                    style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;"
+                    placeholder="How much you paid per unit">
+                @error('buying_price_per_unit')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
+            </div>
+            <div>
+                <label for="price_per_unit" style="display:block;font-size:.8rem;font-weight:600;color:var(--dash-ink);margin-bottom:6px;">Selling price per unit (TZS)</label>
                 <input type="number" id="price_per_unit" name="price_per_unit" value="{{ old('price_per_unit') }}" min="0" step="1"
                     style="width:100%;padding:10px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;"
-                    placeholder=" product price per unit">
+                    placeholder="Product selling price per unit">
                 @error('price_per_unit')<p style="margin:4px 0 0;font-size:.8rem;color:var(--dash-danger);">{{ $message }}</p>@enderror
             </div>
             <div>

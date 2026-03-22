@@ -51,6 +51,7 @@ class InventoryController extends Controller
             'store_id' => ['required', 'exists:stores,id'],
             'quantity' => ['required', 'numeric', 'min:0'],
             'price_per_unit' => ['nullable', 'numeric', 'min:0'],
+            'buying_price_per_unit' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         if (! $organization->products()->where('id', $validated['product_id'])->exists() ||
@@ -65,6 +66,9 @@ class InventoryController extends Controller
         ]);
         $inventory->quantity = ($inventory->quantity ?? 0) + (float) $validated['quantity'];
         $inventory->price_per_unit = $validated['price_per_unit'] ?? $inventory->price_per_unit ?? $inventory->product->price ?? null;
+        if (isset($validated['buying_price_per_unit'])) {
+            $inventory->buying_price_per_unit = $validated['buying_price_per_unit'];
+        }
         $inventory->is_out_of_stock = false;
         $inventory->save();
 
@@ -142,6 +146,10 @@ class InventoryController extends Controller
         if ($request->has('price_per_unit')) {
             $request->validate(['price_per_unit' => ['nullable', 'numeric', 'min:0']]);
             $inventory->price_per_unit = $request->input('price_per_unit');
+        }
+        if ($request->has('buying_price_per_unit')) {
+            $request->validate(['buying_price_per_unit' => ['nullable', 'numeric', 'min:0']]);
+            $inventory->buying_price_per_unit = $request->input('buying_price_per_unit');
         }
         if ($request->has('is_out_of_stock')) {
             $inventory->is_out_of_stock = (bool) $request->input('is_out_of_stock');

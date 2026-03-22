@@ -1,18 +1,19 @@
 <?php
 
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CargoTrackController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LandingController;
-use App\Http\Controllers\CargoTrackController;
 use App\Http\Controllers\LogisticsController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\ServiceProviderController;
 use App\Http\Controllers\SettingsController;
@@ -109,6 +110,8 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('stock-returns', [StockReturnController::class, 'index'])->name('stock-returns.index');
     Route::get('stock-returns/create', [StockReturnController::class, 'create'])->name('stock-returns.create');
     Route::post('stock-returns', [StockReturnController::class, 'store'])->name('stock-returns.store');
+
+    Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
 
     Route::get('expense-categories', [ExpenseCategoryController::class, 'index'])->name('expense-categories.index');
     Route::post('expense-categories', [ExpenseCategoryController::class, 'store'])->name('expense-categories.store');

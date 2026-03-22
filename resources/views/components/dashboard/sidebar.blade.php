@@ -95,7 +95,7 @@
                 <span class="dash-sb-icon"><flux:icon.arrow-uturn-left class="size-5" /></span>
                 <span class="dash-sb-label">Return stocks</span>
             </a>
-            <a href="#" class="dash-sb-item">
+            <a href="{{ route('reports.index') }}" class="dash-sb-item {{ request()->routeIs('reports.*') ? 'active' : '' }}" wire:navigate>
                 <span class="dash-sb-icon"><flux:icon.presentation-chart-bar class="size-5" /></span>
                 <span class="dash-sb-label">Reports</span>
             </a>
