@@ -6,8 +6,8 @@ use App\Models\Client;
 use App\Models\Inventory;
 use App\Models\InventoryTransaction;
 use App\Models\Sale;
-use App\Models\SaleItem;
 use App\Models\ServiceProvider;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -180,25 +180,40 @@ class SaleController extends Controller
         }
         $total = $subtotal + $deliveryCost;
 
-        $receiptNumber = $this->generateReceiptNumber($organization);
-
         DB::beginTransaction();
         try {
-            $sale = $organization->sales()->create([
-                'client_id' => $clientId,
-                'client_name' => $clientName,
-                'client_phone' => $clientPhone ?? ($clientId ? Client::find($clientId)?->phone : null),
-                'sale_date' => $validated['sale_date'],
-                'subtotal' => $subtotal,
-                'delivery_requested' => $deliveryRequested,
-                'delivery_cost' => $deliveryCost,
-                'delivery_service_provider_id' => $deliveryProviderId,
-                'delivery_status' => $deliveryRequested ? Sale::DELIVERY_STATUS_PENDING : null,
-                'total' => $total,
-                'receipt_number' => $receiptNumber,
-                'notes' => $validated['notes'] ?? null,
-                'created_by' => auth()->id(),
-            ]);
+            $sale = null;
+            $receiptNumber = null;
+
+            for ($receiptAttempt = 0; $receiptAttempt < 50; $receiptAttempt++) {
+                $receiptNumber = $this->generateReceiptNumber();
+                try {
+                    $sale = $organization->sales()->create([
+                        'client_id' => $clientId,
+                        'client_name' => $clientName,
+                        'client_phone' => $clientPhone ?? ($clientId ? Client::find($clientId)?->phone : null),
+                        'sale_date' => $validated['sale_date'],
+                        'subtotal' => $subtotal,
+                        'delivery_requested' => $deliveryRequested,
+                        'delivery_cost' => $deliveryCost,
+                        'delivery_service_provider_id' => $deliveryProviderId,
+                        'delivery_status' => $deliveryRequested ? Sale::DELIVERY_STATUS_PENDING : null,
+                        'total' => $total,
+                        'receipt_number' => $receiptNumber,
+                        'notes' => $validated['notes'] ?? null,
+                        'created_by' => auth()->id(),
+                    ]);
+                    break;
+                } catch (UniqueConstraintViolationException $e) {
+                    if (! $this->isDuplicateReceiptNumberViolation($e)) {
+                        throw $e;
+                    }
+                }
+            }
+
+            if ($sale === null) {
+                throw new \RuntimeException('Unable to allocate a unique receipt number.');
+            }
 
             foreach ($validated['items'] as $item) {
                 $qty = (float) $item['quantity'];
@@ -237,7 +252,7 @@ class SaleController extends Controller
                             'quantity' => $qty,
                             'from_store_id' => $inventory->store_id,
                             'to_store_id' => null,
-                            'reference' => 'Sale #' . $sale->id . ' (Receipt ' . $receiptNumber . ')',
+                            'reference' => 'Sale #'.$sale->id.' (Receipt '.$receiptNumber.')',
                             'user_id' => auth()->id(),
                         ]);
                     }
@@ -250,7 +265,7 @@ class SaleController extends Controller
             throw $e;
         }
 
-        return redirect()->route('sales.show', $sale)->with('success', __('Sale recorded. Receipt ') . $receiptNumber);
+        return redirect()->route('sales.show', $sale)->with('success', __('Sale recorded. Receipt ').$receiptNumber);
     }
 
     public function show(Sale $sale): View|RedirectResponse
@@ -275,15 +290,35 @@ class SaleController extends Controller
         return view('sales.receipt', ['sale' => $sale]);
     }
 
-    private function generateReceiptNumber($organization): string
+    private function generateReceiptNumber(): string
     {
         $year = date('Y');
-        $prefix = 'REC-' . $year . '-';
-        $last = $organization->sales()->whereNotNull('receipt_number')->where('receipt_number', 'like', $prefix . '%')->orderByDesc('id')->first();
-        $num = 1;
-        if ($last && preg_match('/' . preg_quote($prefix, '/') . '(\d+)/', $last->receipt_number, $m)) {
-            $num = (int) $m[1] + 1;
+        $prefix = 'REC-'.$year.'-';
+        $startPos = strlen($prefix) + 1;
+
+        $maxSuffix = Sale::query()
+            ->whereNotNull('receipt_number')
+            ->where('receipt_number', 'like', $prefix.'%')
+            ->selectRaw('MAX(CAST(SUBSTRING(receipt_number, ?) AS UNSIGNED)) as max_n', [$startPos])
+            ->value('max_n');
+
+        $num = (int) ($maxSuffix ?? 0) + 1;
+
+        for ($i = 0; $i < 1000; $i++) {
+            $candidate = $prefix.str_pad((string) $num, 5, '0', STR_PAD_LEFT);
+            if (! Sale::query()->where('receipt_number', $candidate)->exists()) {
+                return $candidate;
+            }
+            $num++;
         }
-        return $prefix . str_pad((string) $num, 5, '0', STR_PAD_LEFT);
+
+        throw new \RuntimeException('Unable to allocate a unique receipt number.');
+    }
+
+    private function isDuplicateReceiptNumberViolation(UniqueConstraintViolationException $e): bool
+    {
+        $message = strtolower($e->getMessage());
+
+        return str_contains($message, 'receipt_number');
     }
 }
