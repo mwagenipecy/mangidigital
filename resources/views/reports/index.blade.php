@@ -119,7 +119,7 @@
             <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;letter-spacing:.06em;">{{ __('Net profit / loss') }}</div>
             <div style="font-size:1.6rem;font-weight:900;color:{{ $r['net_profit'] >= 0 ? '#15803d' : '#dc2626' }};margin-top:6px;">{{ $fmt($r['net_profit']) }} <span style="font-size:.75rem;font-weight:500;">TZS</span></div>
             <div style="font-size:.8rem;color:var(--dash-muted);margin-top:4px;">
-                @if($r['net_profit'] >= 0) {{ __('Profit') }} @else {{ __('Loss') }} @endif
+                {{ __('Total sales - buying price (COGS) - expenses') }}
             </div>
         </div>
     </div>
@@ -150,6 +150,7 @@
                     <tr style="background:{{ $r['net_profit'] >= 0 ? '#f0fdf4' : '#fef2f2' }};">
                         <td style="padding:12px 0;font-weight:900;font-size:1rem;">
                             @if($r['net_profit'] >= 0) {{ __('NET PROFIT') }} @else {{ __('NET LOSS') }} @endif
+                            <div style="font-size:.75rem;font-weight:600;color:var(--dash-muted);margin-top:2px;">{{ __('(Total sales - buying price - expenses)') }}</div>
                         </td>
                         <td style="padding:12px 0;text-align:right;font-weight:900;font-size:1.1rem;color:{{ $r['net_profit'] >= 0 ? '#15803d' : '#dc2626' }};">{{ $fmt($r['net_profit']) }} TZS</td>
                     </tr>
@@ -619,6 +620,7 @@
                     <tr style="background:{{ $r['net_profit'] >= 0 ? '#f0fdf4' : '#fef2f2' }};">
                         <td style="padding:12px 0;font-weight:900;font-size:1rem;">
                             @if($r['net_profit'] >= 0) {{ __('NET PROFIT') }} @else {{ __('NET LOSS') }} @endif
+                            <div style="font-size:.75rem;font-weight:600;color:var(--dash-muted);margin-top:2px;">{{ __('(Total sales - buying price - expenses)') }}</div>
                         </td>
                         <td style="padding:12px 0;text-align:right;font-weight:900;font-size:1.1rem;color:{{ $r['net_profit'] >= 0 ? '#15803d' : '#dc2626' }};">{{ $fmt($r['net_profit']) }} TZS</td>
                     </tr>
