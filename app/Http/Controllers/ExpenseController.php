@@ -23,7 +23,9 @@ class ExpenseController extends Controller
         $query = $organization->expenses()->with(['expenseCategory', 'createdByUser'])->latest('expense_date')->latest('id');
         $range = $this->resolveDateRange($request);
 
-        $query->whereBetween('expense_date', [$range['from'], $range['to']]);
+        if ($range['from'] && $range['to']) {
+            $query->whereBetween('expense_date', [$range['from'], $range['to']]);
+        }
 
         if ($request->filled('category')) {
             $query->where('expense_category_id', $request->category);
@@ -33,8 +35,11 @@ class ExpenseController extends Controller
         $expenses->appends($request->query());
         $categories = $organization->expenseCategories()->orderBy('name')->get();
 
-        $statsBaseQuery = $organization->expenses()
-            ->whereBetween('expense_date', [$range['from'], $range['to']]);
+        $statsBaseQuery = $organization->expenses();
+
+        if ($range['from'] && $range['to']) {
+            $statsBaseQuery->whereBetween('expense_date', [$range['from'], $range['to']]);
+        }
 
         if ($request->filled('category')) {
             $statsBaseQuery->where('expense_category_id', $request->category);
@@ -66,8 +71,6 @@ class ExpenseController extends Controller
 
     private function resolveDateRange(Request $request): array
     {
-        $today = CarbonImmutable::today();
-
         if ($request->filled('month')) {
             $monthDate = CarbonImmutable::parse($request->input('month').'-01');
             $from = $monthDate->startOfMonth();
@@ -82,20 +85,29 @@ class ExpenseController extends Controller
             ];
         }
 
-        $from = $request->filled('from')
-            ? CarbonImmutable::parse($request->input('from'))->startOfDay()
-            : $today->startOfMonth();
+        if ($request->filled('from') || $request->filled('to')) {
+            $from = $request->filled('from')
+                ? CarbonImmutable::parse($request->input('from'))->startOfDay()
+                : CarbonImmutable::parse('2020-01-01')->startOfDay();
+            $to = $request->filled('to')
+                ? CarbonImmutable::parse($request->input('to'))->endOfDay()
+                : CarbonImmutable::today()->endOfDay();
 
-        $to = $request->filled('to')
-            ? CarbonImmutable::parse($request->input('to'))->endOfDay()
-            : $today->endOfDay();
+            return [
+                'month' => null,
+                'from' => $from,
+                'to' => $to,
+                'from_display' => $from->format('d M Y'),
+                'to_display' => $to->format('d M Y'),
+            ];
+        }
 
         return [
             'month' => null,
-            'from' => $from,
-            'to' => $to,
-            'from_display' => $from->format('d M Y'),
-            'to_display' => $to->format('d M Y'),
+            'from' => null,
+            'to' => null,
+            'from_display' => __('All time'),
+            'to_display' => '',
         ];
     }
 

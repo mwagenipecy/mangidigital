@@ -45,7 +45,7 @@
         </div>
         <div>
             <label for="month" style="display:block;font-size:.75rem;font-weight:700;color:var(--dash-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;">Month</label>
-            <input
+        <input
                 type="month"
                 id="month"
                 name="month"
@@ -55,16 +55,16 @@
         </div>
         <div>
             <label for="from" style="display:block;font-size:.75rem;font-weight:700;color:var(--dash-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;">From</label>
-            <input type="date" id="from" name="from" value="{{ request('from', $range['from']->format('Y-m-d')) }}" style="padding:9px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
+            <input type="date" id="from" name="from" value="{{ request('from', $range['from']?->format('Y-m-d')) }}" style="padding:9px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
         </div>
         <div>
             <label for="to" style="display:block;font-size:.75rem;font-weight:700;color:var(--dash-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;">To</label>
-            <input type="date" id="to" name="to" value="{{ request('to', $range['to']->format('Y-m-d')) }}" style="padding:9px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
+            <input type="date" id="to" name="to" value="{{ request('to', $range['to']?->format('Y-m-d')) }}" style="padding:9px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
         </div>
         <button type="submit" class="dash-btn dash-btn-brand">Apply</button>
         <a href="{{ route('expenses.index') }}" class="dash-btn dash-btn-outline" wire:navigate>Reset</a>
         <div style="margin-left:auto;font-size:.82rem;color:var(--dash-muted);font-weight:600;">
-            {{ $range['from_display'] }} — {{ $range['to_display'] }}
+            {{ $range['from_display'] }}{{ $range['to_display'] ? ' — '.$range['to_display'] : '' }}
         </div>
     </div>
 </form>

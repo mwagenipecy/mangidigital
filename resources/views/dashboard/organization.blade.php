@@ -25,7 +25,7 @@
     <x-dashboard.kpi-card :value="number_format($salesTotal, 0)" label="Total sales (TZS)" :trend="'This month: ' . number_format($salesThisMonth, 0)" :trendUp="true" color="var(--dash-brand)" bg="var(--dash-brand-10)">
         <x-slot:icon><flux:icon.chart-bar class="size-5" /></x-slot:icon>
     </x-dashboard.kpi-card>
-    <x-dashboard.kpi-card :value="number_format($expensesTotal, 0)" label="Expenses (TZS)" :trend="'This month: ' . number_format($expensesThisMonth, 0)" :trendUp="false" color="var(--dash-danger)" bg="rgba(239,68,68,.08)">
+    <x-dashboard.kpi-card :value="number_format($expensesTotal, 0)" label="All expenses (TZS)" :trend="'This month: ' . number_format($expensesThisMonth, 0)" :trendUp="false" color="var(--dash-danger)" bg="rgba(239,68,68,.08)">
         <x-slot:icon><flux:icon.banknotes class="size-5" /></x-slot:icon>
     </x-dashboard.kpi-card>
     <x-dashboard.kpi-card :value="number_format($salesCount)" label="Total orders" :trend="'This month: ' . $salesThisMonthCount" :trendUp="true" color="var(--dash-ok)" bg="rgba(34,197,94,.08)">

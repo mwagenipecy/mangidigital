@@ -16,7 +16,8 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->isAdmin()) {
+        // Only true admin users can see global/system dashboard.
+        if ((bool) $user->is_admin === true) {
             return $this->adminDashboard();
         }
 
@@ -25,7 +26,8 @@ class DashboardController extends Controller
 
     private function organizationDashboard($user): View|RedirectResponse
     {
-        $organization = $user->organization;
+        // Non-admin dashboard must always be scoped to the user's own organization.
+        $organization = Organization::query()->whereKey($user->organization_id)->first();
         if (! $organization) {
             return view('dashboard.organization-guest', [
                 'user' => $user,
