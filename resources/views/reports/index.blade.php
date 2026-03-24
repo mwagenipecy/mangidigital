@@ -103,7 +103,7 @@
         <div class="dash-card" style="margin-bottom:0;padding:18px;">
             <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;letter-spacing:.06em;">{{ __('Cost of goods sold') }}</div>
             <div style="font-size:1.6rem;font-weight:900;color:#b45309;margin-top:6px;">{{ $fmt($r['cogs']) }} <span style="font-size:.75rem;font-weight:500;">TZS</span></div>
-            <div style="font-size:.8rem;color:var(--dash-muted);margin-top:4px;">{{ __('Based on buying price') }}</div>
+            <div style="font-size:.8rem;color:var(--dash-muted);margin-top:4px;">{{ __('Based on inventory buying price per unit') }}</div>
         </div>
         <div class="dash-card" style="margin-bottom:0;padding:18px;">
             <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;letter-spacing:.06em;">{{ __('Gross profit') }}</div>

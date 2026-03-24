@@ -108,7 +108,8 @@ class ReportController extends Controller
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->leftJoin('inventories', function ($join) {
                 $join->on('sale_items.product_id', '=', 'inventories.product_id')
-                    ->on('sale_items.store_id', '=', 'inventories.store_id');
+                    ->on('sale_items.store_id', '=', 'inventories.store_id')
+                    ->on('sales.organization_id', '=', 'inventories.organization_id');
             })
             ->where('sales.organization_id', $orgId)
             ->whereBetween('sales.sale_date', [$from, $to])
@@ -147,7 +148,8 @@ class ReportController extends Controller
             ->leftJoin('sale_items', 'sales.id', '=', 'sale_items.sale_id')
             ->leftJoin('inventories', function ($join) {
                 $join->on('sale_items.product_id', '=', 'inventories.product_id')
-                    ->on('sale_items.store_id', '=', 'inventories.store_id');
+                    ->on('sale_items.store_id', '=', 'inventories.store_id')
+                    ->on('sales.organization_id', '=', 'inventories.organization_id');
             })
             ->groupBy('sales.id', 'sales.receipt_number', 'sales.sale_date', 'sales.total')
             ->selectRaw('sales.id as sale_id')
@@ -212,7 +214,8 @@ class ReportController extends Controller
             ->leftJoin('sale_items', 'sales.id', '=', 'sale_items.sale_id')
             ->leftJoin('inventories', function ($join) {
                 $join->on('sale_items.product_id', '=', 'inventories.product_id')
-                    ->on('sale_items.store_id', '=', 'inventories.store_id');
+                    ->on('sale_items.store_id', '=', 'inventories.store_id')
+                    ->on('sales.organization_id', '=', 'inventories.organization_id');
             })
             ->selectRaw('COALESCE(sales.client_name, "Walk-in") as client_label')
             ->selectRaw('COUNT(DISTINCT sales.id) as sales_count')
@@ -352,7 +355,8 @@ class ReportController extends Controller
                 ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
                 ->leftJoin('inventories', function ($join) {
                     $join->on('sale_items.product_id', '=', 'inventories.product_id')
-                        ->on('sale_items.store_id', '=', 'inventories.store_id');
+                        ->on('sale_items.store_id', '=', 'inventories.store_id')
+                        ->on('sales.organization_id', '=', 'inventories.organization_id');
                 })
                 ->where('sales.organization_id', $orgId)
                 ->whereBetween('sales.sale_date', [$start, $end])
