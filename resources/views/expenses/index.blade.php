@@ -2,6 +2,10 @@
 
 @section('title', 'Expenses')
 
+@php
+    $fmt = fn ($v) => number_format((float) $v, 0);
+@endphp
+
 @section('content')
 <div class="dash-page-header">
     <div>
@@ -28,18 +32,67 @@
     </div>
 @endif
 
-<form method="GET" action="{{ route('expenses.index') }}" style="margin-bottom:16px;">
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <label for="category" style="font-size:.85rem;color:var(--dash-muted);">Category</label>
-        <select id="category" name="category" style="padding:8px 12px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
+<form method="GET" action="{{ route('expenses.index') }}" class="dash-card" style="margin-bottom:20px;padding:16px 20px;">
+    <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+        <div>
+            <label for="category" style="display:block;font-size:.75rem;font-weight:700;color:var(--dash-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;">Category</label>
+            <select id="category" name="category" style="padding:9px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
             <option value="">All</option>
             @foreach($categories as $c)
                 <option value="{{ $c->id }}" {{ request('category') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
             @endforeach
-        </select>
-        <button type="submit" class="dash-btn dash-btn-outline" style="font-size:.85rem;">Filter</button>
+            </select>
+        </div>
+        <div>
+            <label for="month" style="display:block;font-size:.75rem;font-weight:700;color:var(--dash-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;">Month</label>
+            <input
+                type="month"
+                id="month"
+                name="month"
+                value="{{ request('month', $range['month']) }}"
+                style="padding:9px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;"
+            >
+        </div>
+        <div>
+            <label for="from" style="display:block;font-size:.75rem;font-weight:700;color:var(--dash-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;">From</label>
+            <input type="date" id="from" name="from" value="{{ request('from', $range['from']->format('Y-m-d')) }}" style="padding:9px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
+        </div>
+        <div>
+            <label for="to" style="display:block;font-size:.75rem;font-weight:700;color:var(--dash-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;">To</label>
+            <input type="date" id="to" name="to" value="{{ request('to', $range['to']->format('Y-m-d')) }}" style="padding:9px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
+        </div>
+        <button type="submit" class="dash-btn dash-btn-brand">Apply</button>
+        <a href="{{ route('expenses.index') }}" class="dash-btn dash-btn-outline" wire:navigate>Reset</a>
+        <div style="margin-left:auto;font-size:.82rem;color:var(--dash-muted);font-weight:600;">
+            {{ $range['from_display'] }} — {{ $range['to_display'] }}
+        </div>
     </div>
 </form>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:16px;">
+    <div class="dash-card" style="margin-bottom:0;padding:18px;border-left:4px solid #dc2626;">
+        <div style="font-size:.72rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">Total expenses</div>
+        <div style="font-size:1.5rem;font-weight:900;color:#dc2626;margin-top:6px;">{{ $fmt($stats['total_expense']) }} <span style="font-size:.75rem;font-weight:500;">TZS</span></div>
+        <div style="font-size:.8rem;color:var(--dash-muted);margin-top:4px;">{{ $range['from_display'] }} — {{ $range['to_display'] }}</div>
+    </div>
+    <div class="dash-card" style="margin-bottom:0;padding:18px;">
+        <div style="font-size:.72rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">Expenses count</div>
+        <div style="font-size:1.5rem;font-weight:900;color:var(--dash-ink);margin-top:6px;">{{ $stats['expense_count'] }}</div>
+    </div>
+    <div class="dash-card" style="margin-bottom:0;padding:18px;">
+        <div style="font-size:.72rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">Average expense</div>
+        <div style="font-size:1.5rem;font-weight:900;color:#b45309;margin-top:6px;">{{ $fmt($stats['avg_expense']) }} <span style="font-size:.75rem;font-weight:500;">TZS</span></div>
+    </div>
+    <div class="dash-card" style="margin-bottom:0;padding:18px;">
+        <div style="font-size:.72rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">Highest expense day</div>
+        @if($stats['highest_day'])
+            <div style="font-size:1.1rem;font-weight:900;color:var(--dash-ink);margin-top:6px;">{{ \Carbon\Carbon::parse($stats['highest_day'])->format('d M Y') }}</div>
+            <div style="font-size:.9rem;color:#dc2626;font-weight:700;">{{ $fmt($stats['highest_day_total']) }} TZS</div>
+        @else
+            <div style="font-size:.95rem;color:var(--dash-muted);margin-top:10px;">No data</div>
+        @endif
+    </div>
+</div>
 
 <div class="dash-card">
     <div class="dash-card-header">

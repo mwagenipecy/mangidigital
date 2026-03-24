@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Expense;
 use App\Models\Inventory;
+use App\Models\Invoice;
 use App\Models\Organization;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\StockOrder;
+use App\Models\CargoShipment;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -127,6 +129,140 @@ class ReportController extends Controller
 
         $totalExpenses = (float) $expenseRows->sum('total');
 
+        // --- Sales insights ---
+        $topClientsBySales = Sale::query()
+            ->where('organization_id', $orgId)
+            ->whereBetween('sale_date', [$from, $to])
+            ->selectRaw('COALESCE(client_name, "Walk-in") as client_label')
+            ->selectRaw('COUNT(*) as sales_count')
+            ->selectRaw('SUM(total) as total_sales')
+            ->groupBy('client_label')
+            ->orderByDesc('total_sales')
+            ->limit(5)
+            ->get();
+
+        $highProfitSales = Sale::query()
+            ->where('sales.organization_id', $orgId)
+            ->whereBetween('sales.sale_date', [$from, $to])
+            ->leftJoin('sale_items', 'sales.id', '=', 'sale_items.sale_id')
+            ->leftJoin('inventories', function ($join) {
+                $join->on('sale_items.product_id', '=', 'inventories.product_id')
+                    ->on('sale_items.store_id', '=', 'inventories.store_id');
+            })
+            ->groupBy('sales.id', 'sales.receipt_number', 'sales.sale_date', 'sales.total')
+            ->selectRaw('sales.id as sale_id')
+            ->selectRaw('sales.receipt_number as receipt_number')
+            ->selectRaw('sales.sale_date as sale_date')
+            ->selectRaw('sales.total as total')
+            ->selectRaw('COALESCE(SUM(sale_items.quantity * COALESCE(inventories.buying_price_per_unit, 0)), 0) as cogs')
+            ->selectRaw('(sales.total - COALESCE(SUM(sale_items.quantity * COALESCE(inventories.buying_price_per_unit, 0)), 0)) as profit')
+            ->orderByDesc('profit')
+            ->limit(5)
+            ->get();
+
+        // --- Logistics report ---
+        $salesDeliveryBase = Sale::query()
+            ->where('organization_id', $orgId)
+            ->where('delivery_requested', true)
+            ->whereBetween('sale_date', [$from, $to]);
+
+        $cargoBase = CargoShipment::query()
+            ->where('organization_id', $orgId)
+            ->whereBetween('created_at', [$from, $to]);
+
+        $deliveryPending = (clone $salesDeliveryBase)->where(function ($q) {
+            $q->whereNull('delivery_status')->orWhere('delivery_status', Sale::DELIVERY_STATUS_PENDING);
+        })->count();
+        $deliveryInTransit = (clone $salesDeliveryBase)->where('delivery_status', Sale::DELIVERY_STATUS_IN_TRANSIT)->count();
+        $deliveryArrived = (clone $salesDeliveryBase)->where('delivery_status', Sale::DELIVERY_STATUS_ARRIVED)->count();
+        $deliveryReceived = (clone $salesDeliveryBase)->where('delivery_status', Sale::DELIVERY_STATUS_RECEIVED)->count();
+
+        $cargoPending = (clone $cargoBase)->where(function ($q) {
+            $q->whereNull('delivery_status')->orWhere('delivery_status', CargoShipment::DELIVERY_STATUS_PENDING);
+        })->count();
+        $cargoInTransit = (clone $cargoBase)->where('delivery_status', CargoShipment::DELIVERY_STATUS_IN_TRANSIT)->count();
+        $cargoArrived = (clone $cargoBase)->where('delivery_status', CargoShipment::DELIVERY_STATUS_ARRIVED)->count();
+        $cargoReceived = (clone $cargoBase)->where('delivery_status', CargoShipment::DELIVERY_STATUS_RECEIVED)->count();
+
+        $logisticsTotals = [
+            'pending' => $deliveryPending + $cargoPending,
+            'in_transit' => $deliveryInTransit + $cargoInTransit,
+            'arrived' => $deliveryArrived + $cargoArrived,
+            'received' => $deliveryReceived + $cargoReceived,
+            'delivery_sales_count' => (clone $salesDeliveryBase)->count(),
+            'cargo_shipments_count' => (clone $cargoBase)->count(),
+            'delivery_sales_revenue' => (float) (clone $salesDeliveryBase)->sum('total'),
+            'cargo_revenue' => (float) (clone $cargoBase)->sum('delivery_cost'),
+        ];
+        $logisticsTotals['total_shipments'] = $logisticsTotals['delivery_sales_count'] + $logisticsTotals['cargo_shipments_count'];
+
+        // --- Client report ---
+        $totalClients = (int) $organization->clients()->count();
+        $newClients = (int) $organization->clients()->whereBetween('created_at', [$from, $to])->count();
+        $activeClients = (int) Sale::query()
+            ->where('organization_id', $orgId)
+            ->whereBetween('sale_date', [$from, $to])
+            ->whereNotNull('client_id')
+            ->distinct('client_id')
+            ->count('client_id');
+
+        $topClientsByProfit = Sale::query()
+            ->where('sales.organization_id', $orgId)
+            ->whereBetween('sales.sale_date', [$from, $to])
+            ->leftJoin('sale_items', 'sales.id', '=', 'sale_items.sale_id')
+            ->leftJoin('inventories', function ($join) {
+                $join->on('sale_items.product_id', '=', 'inventories.product_id')
+                    ->on('sale_items.store_id', '=', 'inventories.store_id');
+            })
+            ->selectRaw('COALESCE(sales.client_name, "Walk-in") as client_label')
+            ->selectRaw('COUNT(DISTINCT sales.id) as sales_count')
+            ->selectRaw('SUM(sales.total) as total_sales')
+            ->selectRaw('COALESCE(SUM(sale_items.quantity * COALESCE(inventories.buying_price_per_unit, 0)), 0) as cogs')
+            ->selectRaw('(SUM(sales.total) - COALESCE(SUM(sale_items.quantity * COALESCE(inventories.buying_price_per_unit, 0)), 0)) as profit')
+            ->groupBy('client_label')
+            ->orderByDesc('profit')
+            ->limit(5)
+            ->get();
+
+        // --- Invoice report ---
+        $invoiceBase = Invoice::query()
+            ->where('organization_id', $orgId)
+            ->whereBetween('issue_date', [$from, $to]);
+
+        $invoiceTotals = [
+            'total_count' => (clone $invoiceBase)->count(),
+            'draft_count' => (clone $invoiceBase)->where('status', Invoice::STATUS_DRAFT)->count(),
+            'sent_count' => (clone $invoiceBase)->where('status', Invoice::STATUS_SENT)->count(),
+            'paid_count' => (clone $invoiceBase)->where('status', Invoice::STATUS_PAID)->count(),
+            'issued_total' => (float) (clone $invoiceBase)->sum('total'),
+            'paid_total' => (float) (clone $invoiceBase)->where('status', Invoice::STATUS_PAID)->sum('total'),
+        ];
+        $invoiceTotals['outstanding_total'] = max(0, $invoiceTotals['issued_total'] - $invoiceTotals['paid_total']);
+
+        $largestInvoices = (clone $invoiceBase)
+            ->with('client')
+            ->orderByDesc('total')
+            ->limit(5)
+            ->get();
+
+        // --- Inventory report ---
+        $inventoryRows = Inventory::query()
+            ->where('organization_id', $orgId)
+            ->with(['product', 'store'])
+            ->where('quantity', '>', 0)
+            ->get();
+
+        $lowStockItems = $inventoryRows
+            ->filter(fn (Inventory $inv) => (float) $inv->quantity <= 5)
+            ->sortBy('quantity')
+            ->take(5)
+            ->values();
+
+        $topInventoryValue = $inventoryRows
+            ->sortByDesc(fn (Inventory $inv) => $inv->stock_value)
+            ->take(5)
+            ->values();
+
         // --- Stock orders (capital invested in stock) ---
         $stockOrdersQuery = StockOrder::query()
             ->where('organization_id', $orgId)
@@ -161,6 +297,25 @@ class ReportController extends Controller
             'expense_rows' => $expenseRows,
             'total_expenses' => $totalExpenses,
             'net_profit' => $netProfit,
+            'top_clients_by_sales' => $topClientsBySales,
+            'high_profit_sales' => $highProfitSales,
+            'logistics_totals' => $logisticsTotals,
+            'client_totals' => [
+                'total_clients' => $totalClients,
+                'active_clients' => $activeClients,
+                'new_clients' => $newClients,
+            ],
+            'top_clients_by_profit' => $topClientsByProfit,
+            'invoice_totals' => $invoiceTotals,
+            'largest_invoices' => $largestInvoices,
+            'inventory_totals' => [
+                'items_in_stock' => $inventoryRows->count(),
+                'low_stock_count' => $lowStockItems->count(),
+                'stock_available_qty' => (float) $inventoryRows->sum(fn (Inventory $inv) => (float) $inv->quantity),
+                'stock_worth' => (float) $inventoryRows->sum(fn (Inventory $inv) => (float) $inv->stock_value),
+            ],
+            'low_stock_items' => $lowStockItems,
+            'top_inventory_value' => $topInventoryValue,
             'stock_orders_total' => $stockOrdersTotal,
             'stock_orders_count' => $stockOrdersCount,
             'inventory_stock_cost' => $inventoryStockCost,

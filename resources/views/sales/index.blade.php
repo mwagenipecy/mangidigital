@@ -2,6 +2,10 @@
 
 @section('title', __('Sales'))
 
+@php
+    $fmt = fn ($v) => number_format((float) $v, 0);
+@endphp
+
 @section('content')
 <div class="dash-page-header">
     <div>
@@ -24,6 +28,58 @@
         <p style="margin:0;font-size:.9rem;color:var(--dash-ink);">{{ session('success') }}</p>
     </div>
 @endif
+
+<form method="GET" action="{{ route('sales.index') }}" class="dash-card" style="margin-bottom:20px;padding:16px 20px;">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div>
+            <label for="range" style="display:block;font-size:.75rem;font-weight:700;color:var(--dash-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;">Period</label>
+            <select name="range" id="range" onchange="if(this.value==='custom'){document.getElementById('salesCustomDates').style.display='flex';}else{document.getElementById('salesCustomDates').style.display='none';this.form.submit();}" style="padding:9px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
+                @foreach([
+                    'today' => 'Today',
+                    'this_week' => 'This week',
+                    'this_month' => 'This month',
+                    'last_month' => 'Last month',
+                    'custom' => 'Custom range',
+                ] as $key => $label)
+                    <option value="{{ $key }}" {{ $range['preset'] === $key ? 'selected' : '' }}>{{ $label }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div id="salesCustomDates" style="{{ $range['preset'] === 'custom' ? 'display:flex;' : 'display:none;' }}gap:10px;align-items:flex-end;">
+            <div>
+                <label for="from" style="display:block;font-size:.75rem;font-weight:700;color:var(--dash-muted);margin-bottom:4px;letter-spacing:.04em;text-transform:uppercase;">From</label>
+                <input type="date" name="from" id="from" value="{{ $range['from']->format('Y-m-d') }}" style="padding:9px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
+            </div>
+            <div>
+                <label for="to" style="display:block;font-size:.75rem;font-weight:700;color:var(--dash-muted);margin-bottom:4px;letter-spacing:.04em;text-transform:uppercase;">To</label>
+                <input type="date" name="to" id="to" value="{{ $range['to']->format('Y-m-d') }}" style="padding:9px 14px;border:1.5px solid var(--dash-border);border-radius:var(--dash-r-sm);font-size:.9rem;">
+            </div>
+            <button type="submit" class="dash-btn dash-btn-brand">Apply</button>
+        </div>
+        <div style="margin-left:auto;font-size:.82rem;color:var(--dash-muted);font-weight:600;">
+            {{ $range['from_display'] }} — {{ $range['to_display'] }}
+        </div>
+    </div>
+</form>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:16px;">
+    <div class="dash-card" style="margin-bottom:0;padding:18px;">
+        <div style="font-size:.72rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">Total sales</div>
+        <div style="font-size:1.5rem;font-weight:900;color:#0369a1;margin-top:6px;">{{ $fmt($stats['total_sales']) }} <span style="font-size:.75rem;font-weight:500;">TZS</span></div>
+    </div>
+    <div class="dash-card" style="margin-bottom:0;padding:18px;">
+        <div style="font-size:.72rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">Sales count</div>
+        <div style="font-size:1.5rem;font-weight:900;color:var(--dash-ink);margin-top:6px;">{{ $stats['sales_count'] }}</div>
+    </div>
+    <div class="dash-card" style="margin-bottom:0;padding:18px;">
+        <div style="font-size:.72rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">Cost of goods sold</div>
+        <div style="font-size:1.5rem;font-weight:900;color:#b45309;margin-top:6px;">{{ $fmt($stats['cogs']) }} <span style="font-size:.75rem;font-weight:500;">TZS</span></div>
+    </div>
+    <div class="dash-card" style="margin-bottom:0;padding:18px;border-left:4px solid {{ $stats['net_profit'] >= 0 ? '#15803d' : '#dc2626' }};">
+        <div style="font-size:.72rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">Net profit</div>
+        <div style="font-size:1.5rem;font-weight:900;color:{{ $stats['net_profit'] >= 0 ? '#15803d' : '#dc2626' }};margin-top:6px;">{{ $fmt($stats['net_profit']) }} <span style="font-size:.75rem;font-weight:500;">TZS</span></div>
+    </div>
+</div>
 
 <div class="dash-card">
     <div class="dash-card-header">

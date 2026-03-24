@@ -6,7 +6,9 @@ use App\Models\Client;
 use App\Models\Inventory;
 use App\Models\InventoryTransaction;
 use App\Models\Sale;
+use App\Models\SaleItem;
 use App\Models\ServiceProvider;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,19 +18,94 @@ use Illuminate\View\View;
 
 class SaleController extends Controller
 {
-    public function index(): View|RedirectResponse
+    public function index(Request $request): View|RedirectResponse
     {
         $organization = auth()->user()->organization;
         if (! $organization) {
             return redirect()->route('dashboard')->with('error', __('You need an organization.'));
         }
-        $sales = $organization->sales()
+
+        $range = $this->resolveDateRange($request);
+
+        $baseSalesQuery = $organization->sales()
+            ->whereBetween('sale_date', [$range['from'], $range['to']]);
+
+        $sales = (clone $baseSalesQuery)
             ->with(['client', 'items.product', 'items.store'])
             ->latest('sale_date')
             ->latest('id')
             ->paginate(15);
 
-        return view('sales.index', ['sales' => $sales]);
+        $sales->appends($request->query());
+
+        $totalSales = (float) (clone $baseSalesQuery)->sum('total');
+        $salesCount = (clone $baseSalesQuery)->count();
+
+        $cogs = (float) SaleItem::query()
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->leftJoin('inventories', function ($join) {
+                $join->on('sale_items.product_id', '=', 'inventories.product_id')
+                    ->on('sale_items.store_id', '=', 'inventories.store_id');
+            })
+            ->where('sales.organization_id', $organization->id)
+            ->whereBetween('sales.sale_date', [$range['from'], $range['to']])
+            ->selectRaw('COALESCE(SUM(sale_items.quantity * COALESCE(inventories.buying_price_per_unit, 0)), 0) as cogs')
+            ->value('cogs');
+
+        $netProfit = $totalSales - $cogs;
+
+        return view('sales.index', [
+            'sales' => $sales,
+            'range' => $range,
+            'stats' => [
+                'total_sales' => $totalSales,
+                'sales_count' => $salesCount,
+                'cogs' => $cogs,
+                'net_profit' => $netProfit,
+            ],
+        ]);
+    }
+
+    private function resolveDateRange(Request $request): array
+    {
+        $preset = $request->input('range', 'this_month');
+        $today = CarbonImmutable::today();
+
+        switch ($preset) {
+            case 'today':
+                $from = $today;
+                $to = $today->endOfDay();
+                break;
+            case 'this_week':
+                $from = $today->startOfWeek();
+                $to = $today->endOfWeek();
+                break;
+            case 'last_month':
+                $from = $today->subMonth()->startOfMonth();
+                $to = $today->subMonth()->endOfMonth();
+                break;
+            case 'custom':
+                $from = $request->filled('from')
+                    ? CarbonImmutable::parse($request->input('from'))->startOfDay()
+                    : $today->startOfMonth();
+                $to = $request->filled('to')
+                    ? CarbonImmutable::parse($request->input('to'))->endOfDay()
+                    : $today->endOfDay();
+                break;
+            case 'this_month':
+            default:
+                $from = $today->startOfMonth();
+                $to = $today->endOfDay();
+                break;
+        }
+
+        return [
+            'preset' => $preset,
+            'from' => $from,
+            'to' => $to,
+            'from_display' => $from->format('d M Y'),
+            'to_display' => $to->format('d M Y'),
+        ];
     }
 
     public function create(): View|RedirectResponse

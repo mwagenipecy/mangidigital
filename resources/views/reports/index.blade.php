@@ -6,14 +6,15 @@
     $r = $report;
     $fmt = fn ($v) => number_format((float) $v, 0);
     $activeTab = request('tab', 'overview');
+    $activeRange = request('range', 'this_month');
 @endphp
 
 @section('content')
 <style>
-.rpt-tabs{display:flex;gap:0;border-bottom:2px solid var(--dash-border);margin-bottom:24px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-.rpt-tab{padding:12px 20px;font-size:.85rem;font-weight:600;color:var(--dash-muted);cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s;background:none;border-top:none;border-left:none;border-right:none;user-select:none;}
-.rpt-tab:hover{color:var(--dash-ink);}
-.rpt-tab.is-active{color:var(--dash-brand);border-bottom-color:var(--dash-brand);}
+.rpt-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px;padding:10px;border:1px solid var(--dash-border);border-radius:12px;background:#f8fafc;}
+.rpt-tab{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;font-size:.84rem;font-weight:700;color:var(--dash-muted);text-decoration:none;cursor:pointer;white-space:nowrap;border:1px solid transparent;border-radius:10px;transition:all .15s ease;user-select:none;}
+.rpt-tab:hover{color:var(--dash-ink);background:#eef2f7;border-color:#dbe3ee;}
+.rpt-tab.is-active{color:#fff;background:var(--dash-brand);border-color:var(--dash-brand);box-shadow:0 6px 16px rgba(37,99,235,.2);}
 .rpt-panel{display:none;animation:rptFade .2s ease;}
 .rpt-panel.is-active{display:block;}
 @keyframes rptFade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
@@ -28,7 +29,7 @@
 
 {{-- Date range filter --}}
 <form method="GET" action="{{ route('reports.index') }}" class="dash-card" style="margin-bottom:20px;padding:16px 20px;" id="reportFilterForm">
-    <input type="hidden" name="tab" id="hiddenTab" value="{{ $activeTab }}">
+    <input type="hidden" name="tab" value="{{ $activeTab }}">
     <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
         <div>
             <label for="range" style="display:block;font-size:.75rem;font-weight:700;color:var(--dash-muted);margin-bottom:4px;text-transform:uppercase;">{{ __('Period') }}</label>
@@ -62,11 +63,16 @@
 
 {{-- Tabs --}}
 <div class="rpt-tabs" role="tablist">
-    <button class="rpt-tab {{ $activeTab === 'overview' ? 'is-active' : '' }}" role="tab" aria-selected="{{ $activeTab === 'overview' ? 'true' : 'false' }}" data-tab="overview">{{ __('Overview') }}</button>
-    <button class="rpt-tab {{ $activeTab === 'pnl' ? 'is-active' : '' }}" role="tab" aria-selected="{{ $activeTab === 'pnl' ? 'true' : 'false' }}" data-tab="pnl">{{ __('Profit & Loss') }}</button>
-    <button class="rpt-tab {{ $activeTab === 'expenses' ? 'is-active' : '' }}" role="tab" aria-selected="{{ $activeTab === 'expenses' ? 'true' : 'false' }}" data-tab="expenses">{{ __('Expenses') }}</button>
-    <button class="rpt-tab {{ $activeTab === 'capital' ? 'is-active' : '' }}" role="tab" aria-selected="{{ $activeTab === 'capital' ? 'true' : 'false' }}" data-tab="capital">{{ __('Capital & Inventory') }}</button>
-    <button class="rpt-tab {{ $activeTab === 'trend' ? 'is-active' : '' }}" role="tab" aria-selected="{{ $activeTab === 'trend' ? 'true' : 'false' }}" data-tab="trend">{{ __('Trend') }}</button>
+    <a class="rpt-tab {{ $activeTab === 'overview' ? 'is-active' : '' }}" role="tab" aria-selected="{{ $activeTab === 'overview' ? 'true' : 'false' }}" href="{{ route('reports.index', array_merge(request()->query(), ['tab' => 'overview', 'range' => $activeRange])) }}" wire:navigate>{{ __('Overview') }}</a>
+    <a class="rpt-tab {{ $activeTab === 'sales' ? 'is-active' : '' }}" role="tab" aria-selected="{{ $activeTab === 'sales' ? 'true' : 'false' }}" href="{{ route('reports.index', array_merge(request()->query(), ['tab' => 'sales', 'range' => $activeRange])) }}" wire:navigate>{{ __('Sales') }}</a>
+    <a class="rpt-tab {{ $activeTab === 'logistics' ? 'is-active' : '' }}" role="tab" aria-selected="{{ $activeTab === 'logistics' ? 'true' : 'false' }}" href="{{ route('reports.index', array_merge(request()->query(), ['tab' => 'logistics', 'range' => $activeRange])) }}" wire:navigate>{{ __('Logistics') }}</a>
+    <a class="rpt-tab {{ $activeTab === 'clients' ? 'is-active' : '' }}" role="tab" aria-selected="{{ $activeTab === 'clients' ? 'true' : 'false' }}" href="{{ route('reports.index', array_merge(request()->query(), ['tab' => 'clients', 'range' => $activeRange])) }}" wire:navigate>{{ __('Clients') }}</a>
+    <a class="rpt-tab {{ $activeTab === 'invoices' ? 'is-active' : '' }}" role="tab" aria-selected="{{ $activeTab === 'invoices' ? 'true' : 'false' }}" href="{{ route('reports.index', array_merge(request()->query(), ['tab' => 'invoices', 'range' => $activeRange])) }}" wire:navigate>{{ __('Invoices') }}</a>
+    <a class="rpt-tab {{ $activeTab === 'inventory' ? 'is-active' : '' }}" role="tab" aria-selected="{{ $activeTab === 'inventory' ? 'true' : 'false' }}" href="{{ route('reports.index', array_merge(request()->query(), ['tab' => 'inventory', 'range' => $activeRange])) }}" wire:navigate>{{ __('Inventory') }}</a>
+    <a class="rpt-tab {{ $activeTab === 'pnl' ? 'is-active' : '' }}" role="tab" aria-selected="{{ $activeTab === 'pnl' ? 'true' : 'false' }}" href="{{ route('reports.index', array_merge(request()->query(), ['tab' => 'pnl', 'range' => $activeRange])) }}" wire:navigate>{{ __('Profit & Loss') }}</a>
+    <a class="rpt-tab {{ $activeTab === 'expenses' ? 'is-active' : '' }}" role="tab" aria-selected="{{ $activeTab === 'expenses' ? 'true' : 'false' }}" href="{{ route('reports.index', array_merge(request()->query(), ['tab' => 'expenses', 'range' => $activeRange])) }}" wire:navigate>{{ __('Expenses') }}</a>
+    <a class="rpt-tab {{ $activeTab === 'capital' ? 'is-active' : '' }}" role="tab" aria-selected="{{ $activeTab === 'capital' ? 'true' : 'false' }}" href="{{ route('reports.index', array_merge(request()->query(), ['tab' => 'capital', 'range' => $activeRange])) }}" wire:navigate>{{ __('Capital & Inventory') }}</a>
+    <a class="rpt-tab {{ $activeTab === 'trend' ? 'is-active' : '' }}" role="tab" aria-selected="{{ $activeTab === 'trend' ? 'true' : 'false' }}" href="{{ route('reports.index', array_merge(request()->query(), ['tab' => 'trend', 'range' => $activeRange])) }}" wire:navigate>{{ __('Trend') }}</a>
 </div>
 
 {{-- ═══════════════════════════════════════════════════════════════════ --}}
@@ -74,8 +80,21 @@
 {{-- ═══════════════════════════════════════════════════════════════════ --}}
 <div class="rpt-panel {{ $activeTab === 'overview' ? 'is-active' : '' }}" id="panel-overview" role="tabpanel">
 
+    <div class="dash-card" style="margin-bottom:16px;padding:16px 20px;border-left:4px solid {{ $r['net_profit'] >= 0 ? '#15803d' : '#dc2626' }};">
+        <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between;">
+            <div>
+                <div style="font-size:.78rem;color:var(--dash-muted);text-transform:uppercase;font-weight:700;letter-spacing:.05em;">{{ __('Revenue') }}</div>
+                <div style="font-size:1.3rem;font-weight:900;color:#0369a1;">{{ $fmt($r['total_revenue']) }} TZS</div>
+            </div>
+            <div>
+                <div style="font-size:.78rem;color:var(--dash-muted);text-transform:uppercase;font-weight:700;letter-spacing:.05em;">{{ __('Net profit') }}</div>
+                <div style="font-size:1.3rem;font-weight:900;color:{{ $r['net_profit'] >= 0 ? '#15803d' : '#dc2626' }};">{{ $fmt($r['net_profit']) }} TZS</div>
+            </div>
+        </div>
+    </div>
+
     {{-- KPI cards --}}
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
         <div class="dash-card" style="margin-bottom:0;padding:18px;">
             <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;letter-spacing:.06em;">{{ __('Total revenue') }}</div>
             <div style="font-size:1.6rem;font-weight:900;color:#0369a1;margin-top:6px;">{{ $fmt($r['total_revenue']) }} <span style="font-size:.75rem;font-weight:500;">TZS</span></div>
@@ -134,6 +153,419 @@
                         </td>
                         <td style="padding:12px 0;text-align:right;font-weight:900;font-size:1.1rem;color:{{ $r['net_profit'] >= 0 ? '#15803d' : '#dc2626' }};">{{ $fmt($r['net_profit']) }} TZS</td>
                     </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{{-- ═══════════════════════════════════════════════════════════════════ --}}
+{{-- TAB: Sales                                                         --}}
+{{-- ═══════════════════════════════════════════════════════════════════ --}}
+<div class="rpt-panel {{ $activeTab === 'sales' ? 'is-active' : '' }}" id="panel-sales" role="tabpanel">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
+        <div class="dash-card" style="margin-bottom:0;padding:18px;">
+            <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;letter-spacing:.06em;">{{ __('Sales revenue') }}</div>
+            <div style="font-size:1.6rem;font-weight:900;color:#0369a1;margin-top:6px;">{{ $fmt($r['total_revenue']) }} <span style="font-size:.75rem;font-weight:500;">TZS</span></div>
+        </div>
+        <div class="dash-card" style="margin-bottom:0;padding:18px;">
+            <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;letter-spacing:.06em;">{{ __('Sales count') }}</div>
+            <div style="font-size:1.6rem;font-weight:900;color:var(--dash-ink);margin-top:6px;">{{ $r['sales_count'] }}</div>
+        </div>
+        <div class="dash-card" style="margin-bottom:0;padding:18px;">
+            <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;letter-spacing:.06em;">{{ __('Gross profit') }}</div>
+            <div style="font-size:1.6rem;font-weight:900;color:{{ $r['gross_profit'] >= 0 ? '#15803d' : '#dc2626' }};margin-top:6px;">{{ $fmt($r['gross_profit']) }} <span style="font-size:.75rem;font-weight:500;">TZS</span></div>
+        </div>
+    </div>
+
+    <div class="dash-card" style="margin-bottom:24px;">
+        <div class="dash-card-header">
+            <div>
+                <div class="dash-card-title">{{ __('Top clients by sales') }}</div>
+                <div class="dash-card-subtitle">{{ $range['from_display'] }} — {{ $range['to_display'] }}</div>
+            </div>
+        </div>
+        <div class="dash-table-wrap">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>{{ __('Client') }}</th>
+                        <th style="text-align:center;">{{ __('Sales count') }}</th>
+                        <th style="text-align:right;">{{ __('Total sales') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($r['top_clients_by_sales'] as $row)
+                    <tr>
+                        <td><span class="dash-td-main">{{ $row->client_label ?: 'Walk-in' }}</span></td>
+                        <td style="text-align:center;"><span class="dash-td-sub">{{ $row->sales_count }}</span></td>
+                        <td style="text-align:right;"><span class="dash-td-amount" style="color:#0369a1;">{{ $fmt($row->total_sales) }} TZS</span></td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="3" style="text-align:center;padding:24px;color:var(--dash-muted);">{{ __('No sales in this period.') }}</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="dash-card" style="margin-bottom:0;">
+        <div class="dash-card-header">
+            <div>
+                <div class="dash-card-title">{{ __('Most profitable sales') }}</div>
+                <div class="dash-card-subtitle">{{ __('Based on sale total minus buying cost (COGS)') }}</div>
+            </div>
+        </div>
+        <div class="dash-table-wrap">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>{{ __('Receipt') }}</th>
+                        <th>{{ __('Date') }}</th>
+                        <th style="text-align:right;">{{ __('Sale amount') }}</th>
+                        <th style="text-align:right;">{{ __('COGS') }}</th>
+                        <th style="text-align:right;">{{ __('Profit') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($r['high_profit_sales'] as $row)
+                    <tr>
+                        <td><span class="dash-td-main">{{ $row->receipt_number ?? ('#' . $row->sale_id) }}</span></td>
+                        <td><span class="dash-td-sub">{{ \Carbon\Carbon::parse($row->sale_date)->format('d M Y') }}</span></td>
+                        <td style="text-align:right;"><span class="dash-td-amount">{{ $fmt($row->total) }} TZS</span></td>
+                        <td style="text-align:right;"><span class="dash-td-amount" style="color:#b45309;">{{ $fmt($row->cogs) }} TZS</span></td>
+                        <td style="text-align:right;"><span class="dash-td-amount" style="font-weight:700;color:{{ $row->profit >= 0 ? '#15803d' : '#dc2626' }};">{{ $fmt($row->profit) }} TZS</span></td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" style="text-align:center;padding:24px;color:var(--dash-muted);">{{ __('No profitable sales data in this period.') }}</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{{-- ═══════════════════════════════════════════════════════════════════ --}}
+{{-- TAB: Logistics                                                     --}}
+{{-- ═══════════════════════════════════════════════════════════════════ --}}
+<div class="rpt-panel {{ $activeTab === 'logistics' ? 'is-active' : '' }}" id="panel-logistics" role="tabpanel">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
+        <div class="dash-card" style="margin-bottom:0;padding:18px;">
+            <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">{{ __('Total shipments') }}</div>
+            <div style="font-size:1.45rem;font-weight:900;color:var(--dash-ink);margin-top:6px;">{{ $r['logistics_totals']['total_shipments'] }}</div>
+        </div>
+        <div class="dash-card" style="margin-bottom:0;padding:18px;">
+            <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">{{ __('Delivery sales') }}</div>
+            <div style="font-size:1.45rem;font-weight:900;color:#0369a1;margin-top:6px;">{{ $r['logistics_totals']['delivery_sales_count'] }}</div>
+        </div>
+        <div class="dash-card" style="margin-bottom:0;padding:18px;">
+            <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">{{ __('Cargo shipments') }}</div>
+            <div style="font-size:1.45rem;font-weight:900;color:#7c3aed;margin-top:6px;">{{ $r['logistics_totals']['cargo_shipments_count'] }}</div>
+        </div>
+        <div class="dash-card" style="margin-bottom:0;padding:18px;">
+            <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">{{ __('Logistics revenue') }}</div>
+            <div style="font-size:1.45rem;font-weight:900;color:#15803d;margin-top:6px;">{{ $fmt($r['logistics_totals']['delivery_sales_revenue'] + $r['logistics_totals']['cargo_revenue']) }} <span style="font-size:.75rem;font-weight:500;">TZS</span></div>
+        </div>
+    </div>
+
+    <div class="dash-card" style="margin-bottom:0;">
+        <div class="dash-card-header">
+            <div>
+                <div class="dash-card-title">{{ __('Shipment status summary') }}</div>
+                <div class="dash-card-subtitle">{{ $range['from_display'] }} — {{ $range['to_display'] }}</div>
+            </div>
+        </div>
+        <div class="dash-table-wrap">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>{{ __('Pending') }}</th>
+                        <th>{{ __('In transit') }}</th>
+                        <th>{{ __('Arrived') }}</th>
+                        <th>{{ __('Received') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="dash-td-main">{{ $r['logistics_totals']['pending'] }}</span></td>
+                        <td><span class="dash-td-main">{{ $r['logistics_totals']['in_transit'] }}</span></td>
+                        <td><span class="dash-td-main">{{ $r['logistics_totals']['arrived'] }}</span></td>
+                        <td><span class="dash-td-main">{{ $r['logistics_totals']['received'] }}</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{{-- ═══════════════════════════════════════════════════════════════════ --}}
+{{-- TAB: Clients                                                       --}}
+{{-- ═══════════════════════════════════════════════════════════════════ --}}
+<div class="rpt-panel {{ $activeTab === 'clients' ? 'is-active' : '' }}" id="panel-clients" role="tabpanel">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
+        <div class="dash-card" style="margin-bottom:0;padding:18px;">
+            <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">{{ __('Total clients') }}</div>
+            <div style="font-size:1.45rem;font-weight:900;color:var(--dash-ink);margin-top:6px;">{{ $r['client_totals']['total_clients'] }}</div>
+        </div>
+        <div class="dash-card" style="margin-bottom:0;padding:18px;">
+            <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">{{ __('Active clients') }}</div>
+            <div style="font-size:1.45rem;font-weight:900;color:#0369a1;margin-top:6px;">{{ $r['client_totals']['active_clients'] }}</div>
+        </div>
+        <div class="dash-card" style="margin-bottom:0;padding:18px;">
+            <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">{{ __('New clients in period') }}</div>
+            <div style="font-size:1.45rem;font-weight:900;color:#15803d;margin-top:6px;">{{ $r['client_totals']['new_clients'] }}</div>
+        </div>
+    </div>
+
+    <div class="dash-card" style="margin-bottom:24px;">
+        <div class="dash-card-header">
+            <div>
+                <div class="dash-card-title">{{ __('Top clients by sales') }}</div>
+                <div class="dash-card-subtitle">{{ __('Highest sales totals in selected period') }}</div>
+            </div>
+        </div>
+        <div class="dash-table-wrap">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>{{ __('Client') }}</th>
+                        <th style="text-align:center;">{{ __('Sales count') }}</th>
+                        <th style="text-align:right;">{{ __('Total sales') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($r['top_clients_by_sales'] as $row)
+                    <tr>
+                        <td><span class="dash-td-main">{{ $row->client_label ?: 'Walk-in' }}</span></td>
+                        <td style="text-align:center;"><span class="dash-td-sub">{{ $row->sales_count }}</span></td>
+                        <td style="text-align:right;"><span class="dash-td-amount">{{ $fmt($row->total_sales) }} TZS</span></td>
+                    </tr>
+                    @empty
+                    <tr><td colspan="3" style="text-align:center;padding:24px;color:var(--dash-muted);">{{ __('No client sales data in this period.') }}</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="dash-card" style="margin-bottom:0;">
+        <div class="dash-card-header">
+            <div>
+                <div class="dash-card-title">{{ __('Top clients by profit') }}</div>
+                <div class="dash-card-subtitle">{{ __('Sales total minus buying cost (COGS)') }}</div>
+            </div>
+        </div>
+        <div class="dash-table-wrap">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>{{ __('Client') }}</th>
+                        <th style="text-align:center;">{{ __('Sales count') }}</th>
+                        <th style="text-align:right;">{{ __('Total sales') }}</th>
+                        <th style="text-align:right;">{{ __('Profit') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($r['top_clients_by_profit'] as $row)
+                    <tr>
+                        <td><span class="dash-td-main">{{ $row->client_label ?: 'Walk-in' }}</span></td>
+                        <td style="text-align:center;"><span class="dash-td-sub">{{ $row->sales_count }}</span></td>
+                        <td style="text-align:right;"><span class="dash-td-amount">{{ $fmt($row->total_sales) }} TZS</span></td>
+                        <td style="text-align:right;"><span class="dash-td-amount" style="font-weight:700;color:{{ $row->profit >= 0 ? '#15803d' : '#dc2626' }};">{{ $fmt($row->profit) }} TZS</span></td>
+                    </tr>
+                    @empty
+                    <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--dash-muted);">{{ __('No client profit data in this period.') }}</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{{-- ═══════════════════════════════════════════════════════════════════ --}}
+{{-- TAB: Invoices                                                      --}}
+{{-- ═══════════════════════════════════════════════════════════════════ --}}
+<div class="rpt-panel {{ $activeTab === 'invoices' ? 'is-active' : '' }}" id="panel-invoices" role="tabpanel">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
+        <div class="dash-card" style="margin-bottom:0;padding:18px;">
+            <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">{{ __('Total invoices') }}</div>
+            <div style="font-size:1.45rem;font-weight:900;color:var(--dash-ink);margin-top:6px;">{{ $r['invoice_totals']['total_count'] }}</div>
+        </div>
+        <div class="dash-card" style="margin-bottom:0;padding:18px;">
+            <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">{{ __('Issued total') }}</div>
+            <div style="font-size:1.45rem;font-weight:900;color:#0369a1;margin-top:6px;">{{ $fmt($r['invoice_totals']['issued_total']) }} <span style="font-size:.75rem;font-weight:500;">TZS</span></div>
+        </div>
+        <div class="dash-card" style="margin-bottom:0;padding:18px;">
+            <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">{{ __('Paid total') }}</div>
+            <div style="font-size:1.45rem;font-weight:900;color:#15803d;margin-top:6px;">{{ $fmt($r['invoice_totals']['paid_total']) }} <span style="font-size:.75rem;font-weight:500;">TZS</span></div>
+        </div>
+        <div class="dash-card" style="margin-bottom:0;padding:18px;border-left:4px solid #dc2626;">
+            <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">{{ __('Outstanding') }}</div>
+            <div style="font-size:1.45rem;font-weight:900;color:#dc2626;margin-top:6px;">{{ $fmt($r['invoice_totals']['outstanding_total']) }} <span style="font-size:.75rem;font-weight:500;">TZS</span></div>
+        </div>
+    </div>
+
+    <div class="dash-card" style="margin-bottom:24px;">
+        <div class="dash-card-header">
+            <div>
+                <div class="dash-card-title">{{ __('Invoice status summary') }}</div>
+                <div class="dash-card-subtitle">{{ __('Draft, sent, paid') }}</div>
+            </div>
+        </div>
+        <div class="dash-table-wrap">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>{{ __('Draft') }}</th>
+                        <th>{{ __('Sent') }}</th>
+                        <th>{{ __('Paid') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="dash-td-main">{{ $r['invoice_totals']['draft_count'] }}</span></td>
+                        <td><span class="dash-td-main">{{ $r['invoice_totals']['sent_count'] }}</span></td>
+                        <td><span class="dash-td-main">{{ $r['invoice_totals']['paid_count'] }}</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="dash-card" style="margin-bottom:0;">
+        <div class="dash-card-header">
+            <div>
+                <div class="dash-card-title">{{ __('Largest invoices') }}</div>
+                <div class="dash-card-subtitle">{{ $range['from_display'] }} — {{ $range['to_display'] }}</div>
+            </div>
+        </div>
+        <div class="dash-table-wrap">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>{{ __('Invoice') }}</th>
+                        <th>{{ __('Client') }}</th>
+                        <th>{{ __('Status') }}</th>
+                        <th style="text-align:right;">{{ __('Total') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($r['largest_invoices'] as $inv)
+                    <tr>
+                        <td><span class="dash-td-main">{{ $inv->display_number }}</span></td>
+                        <td><span class="dash-td-sub">{{ $inv->client?->name ?? '—' }}</span></td>
+                        <td><span class="dash-pill">{{ ucfirst($inv->status) }}</span></td>
+                        <td style="text-align:right;"><span class="dash-td-amount">{{ $fmt($inv->total) }} TZS</span></td>
+                    </tr>
+                    @empty
+                    <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--dash-muted);">{{ __('No invoices in this period.') }}</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{{-- ═══════════════════════════════════════════════════════════════════ --}}
+{{-- TAB: Inventory                                                     --}}
+{{-- ═══════════════════════════════════════════════════════════════════ --}}
+<div class="rpt-panel {{ $activeTab === 'inventory' ? 'is-active' : '' }}" id="panel-inventory" role="tabpanel">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
+        <div class="dash-card" style="margin-bottom:0;padding:18px;">
+            <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">{{ __('Items in stock') }}</div>
+            <div style="font-size:1.45rem;font-weight:900;color:var(--dash-ink);margin-top:6px;">{{ $r['inventory_totals']['items_in_stock'] }}</div>
+        </div>
+        <div class="dash-card" style="margin-bottom:0;padding:18px;">
+            <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">{{ __('Stock available') }}</div>
+            <div style="font-size:1.45rem;font-weight:900;color:#0f766e;margin-top:6px;">{{ number_format((float) $r['inventory_totals']['stock_available_qty'], 2) }}</div>
+        </div>
+        <div class="dash-card" style="margin-bottom:0;padding:18px;">
+            <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">{{ __('Low stock items') }}</div>
+            <div style="font-size:1.45rem;font-weight:900;color:#dc2626;margin-top:6px;">{{ $r['inventory_totals']['low_stock_count'] }}</div>
+        </div>
+        <div class="dash-card" style="margin-bottom:0;padding:18px;">
+            <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">{{ __('Stock cost') }}</div>
+            <div style="font-size:1.45rem;font-weight:900;color:#b45309;margin-top:6px;">{{ $fmt($r['inventory_stock_cost']) }} <span style="font-size:.75rem;font-weight:500;">TZS</span></div>
+        </div>
+        <div class="dash-card" style="margin-bottom:0;padding:18px;">
+            <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">{{ __('Stock value') }}</div>
+            <div style="font-size:1.45rem;font-weight:900;color:#0369a1;margin-top:6px;">{{ $fmt($r['inventory_totals']['stock_worth']) }} <span style="font-size:.75rem;font-weight:500;">TZS</span></div>
+        </div>
+    </div>
+
+    <div class="dash-card" style="margin-bottom:24px;">
+        <div class="dash-card-header">
+            <div>
+                <div class="dash-card-title">{{ __('Low stock alert') }}</div>
+                <div class="dash-card-subtitle">{{ __('Items with quantity 5 or below') }}</div>
+            </div>
+        </div>
+        <div class="dash-table-wrap">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>{{ __('Product') }}</th>
+                        <th>{{ __('Store') }}</th>
+                        <th style="text-align:right;">{{ __('Qty') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($r['low_stock_items'] as $inv)
+                    <tr>
+                        <td><span class="dash-td-main">{{ $inv->product?->name ?? '—' }}</span></td>
+                        <td><span class="dash-td-sub">{{ $inv->store?->name ?? '—' }}</span></td>
+                        <td style="text-align:right;">
+                            <span class="dash-td-amount" style="color:#dc2626;">
+                                {{ number_format((float) $inv->quantity, 2) }}
+                                {{ $inv->product?->unit ? ' ' . $inv->product->unit : '' }}
+                            </span>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr><td colspan="3" style="text-align:center;padding:24px;color:var(--dash-muted);">{{ __('No low stock items currently.') }}</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="dash-card" style="margin-bottom:0;">
+        <div class="dash-card-header">
+            <div>
+                <div class="dash-card-title">{{ __('Top inventory by value') }}</div>
+                <div class="dash-card-subtitle">{{ __('Highest stock value items') }}</div>
+            </div>
+        </div>
+        <div class="dash-table-wrap">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>{{ __('Product') }}</th>
+                        <th>{{ __('Store') }}</th>
+                        <th style="text-align:right;">{{ __('Available') }}</th>
+                        <th style="text-align:right;">{{ __('Stock value') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($r['top_inventory_value'] as $inv)
+                    <tr>
+                        <td><span class="dash-td-main">{{ $inv->product?->name ?? '—' }}</span></td>
+                        <td><span class="dash-td-sub">{{ $inv->store?->name ?? '—' }}</span></td>
+                        <td style="text-align:right;">
+                            <span class="dash-td-sub">
+                                {{ number_format((float) $inv->quantity, 2) }}
+                                {{ $inv->product?->unit ? ' ' . $inv->product->unit : '' }}
+                            </span>
+                        </td>
+                        <td style="text-align:right;"><span class="dash-td-amount">{{ $fmt($inv->stock_value) }} TZS</span></td>
+                    </tr>
+                    @empty
+                    <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--dash-muted);">{{ __('No inventory items available.') }}</td></tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
@@ -202,7 +634,7 @@
 <div class="rpt-panel {{ $activeTab === 'expenses' ? 'is-active' : '' }}" id="panel-expenses" role="tabpanel">
 
     {{-- Expenses KPI --}}
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
         <div class="dash-card" style="margin-bottom:0;padding:18px;border-left:4px solid #dc2626;">
             <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;letter-spacing:.06em;">{{ __('Total expenses') }}</div>
             <div style="font-size:1.6rem;font-weight:900;color:#dc2626;margin-top:6px;">{{ $fmt($r['total_expenses']) }} <span style="font-size:.75rem;font-weight:500;">TZS</span></div>
@@ -294,7 +726,7 @@
 {{-- TAB: Capital & Inventory                                           --}}
 {{-- ═══════════════════════════════════════════════════════════════════ --}}
 <div class="rpt-panel {{ $activeTab === 'capital' ? 'is-active' : '' }}" id="panel-capital" role="tabpanel">
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;">
         <div class="dash-card" style="margin-bottom:0;padding:18px;">
             <div style="font-size:.7rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;letter-spacing:.06em;">{{ __('Stock orders (period)') }}</div>
             <div style="font-size:1.35rem;font-weight:900;color:#b45309;margin-top:6px;">{{ $fmt($r['stock_orders_total']) }} <span style="font-size:.75rem;font-weight:500;">TZS</span></div>
@@ -437,34 +869,3 @@
 
 @endsection
 
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    var tabs = document.querySelectorAll('.rpt-tab');
-    var panels = document.querySelectorAll('.rpt-panel');
-    var hiddenTab = document.getElementById('hiddenTab');
-
-    tabs.forEach(function (tab) {
-        tab.addEventListener('click', function () {
-            var target = this.getAttribute('data-tab');
-
-            tabs.forEach(function (t) {
-                t.classList.remove('is-active');
-                t.setAttribute('aria-selected', 'false');
-            });
-            panels.forEach(function (p) { p.classList.remove('is-active'); });
-
-            this.classList.add('is-active');
-            this.setAttribute('aria-selected', 'true');
-            document.getElementById('panel-' + target).classList.add('is-active');
-
-            if (hiddenTab) hiddenTab.value = target;
-
-            var url = new URL(window.location);
-            url.searchParams.set('tab', target);
-            window.history.replaceState(null, '', url.toString());
-        });
-    });
-});
-</script>
-@endpush

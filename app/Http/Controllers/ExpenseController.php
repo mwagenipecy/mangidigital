@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -20,18 +21,82 @@ class ExpenseController extends Controller
         }
 
         $query = $organization->expenses()->with(['expenseCategory', 'createdByUser'])->latest('expense_date')->latest('id');
+        $range = $this->resolveDateRange($request);
+
+        $query->whereBetween('expense_date', [$range['from'], $range['to']]);
 
         if ($request->filled('category')) {
             $query->where('expense_category_id', $request->category);
         }
 
         $expenses = $query->paginate(20);
+        $expenses->appends($request->query());
         $categories = $organization->expenseCategories()->orderBy('name')->get();
+
+        $statsBaseQuery = $organization->expenses()
+            ->whereBetween('expense_date', [$range['from'], $range['to']]);
+
+        if ($request->filled('category')) {
+            $statsBaseQuery->where('expense_category_id', $request->category);
+        }
+
+        $totalExpense = (float) (clone $statsBaseQuery)->sum('amount');
+        $expenseCount = (clone $statsBaseQuery)->count();
+        $avgExpense = $expenseCount > 0 ? ($totalExpense / $expenseCount) : 0;
+
+        $highestExpenseDay = (clone $statsBaseQuery)
+            ->selectRaw('expense_date, SUM(amount) as total_day')
+            ->groupBy('expense_date')
+            ->orderByDesc('total_day')
+            ->first();
 
         return view('expenses.index', [
             'expenses' => $expenses,
             'categories' => $categories,
+            'range' => $range,
+            'stats' => [
+                'total_expense' => $totalExpense,
+                'expense_count' => $expenseCount,
+                'avg_expense' => $avgExpense,
+                'highest_day' => $highestExpenseDay?->expense_date,
+                'highest_day_total' => (float) ($highestExpenseDay?->total_day ?? 0),
+            ],
         ]);
+    }
+
+    private function resolveDateRange(Request $request): array
+    {
+        $today = CarbonImmutable::today();
+
+        if ($request->filled('month')) {
+            $monthDate = CarbonImmutable::parse($request->input('month').'-01');
+            $from = $monthDate->startOfMonth();
+            $to = $monthDate->endOfMonth();
+
+            return [
+                'month' => $monthDate->format('Y-m'),
+                'from' => $from,
+                'to' => $to,
+                'from_display' => $from->format('d M Y'),
+                'to_display' => $to->format('d M Y'),
+            ];
+        }
+
+        $from = $request->filled('from')
+            ? CarbonImmutable::parse($request->input('from'))->startOfDay()
+            : $today->startOfMonth();
+
+        $to = $request->filled('to')
+            ? CarbonImmutable::parse($request->input('to'))->endOfDay()
+            : $today->endOfDay();
+
+        return [
+            'month' => null,
+            'from' => $from,
+            'to' => $to,
+            'from_display' => $from->format('d M Y'),
+            'to_display' => $to->format('d M Y'),
+        ];
     }
 
     public function create(): View|RedirectResponse

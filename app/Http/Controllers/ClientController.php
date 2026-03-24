@@ -16,9 +16,22 @@ class ClientController extends Controller
         if (! $organization) {
             return redirect()->route('dashboard')->with('error', __('You need an organization.'));
         }
-        $clients = $organization->clients()->orderBy('name')->paginate(20);
+        $clientsQuery = $organization->clients();
+        $clients = (clone $clientsQuery)->orderBy('name')->paginate(20);
+        $clients->appends(request()->query());
 
-        return view('clients.index', ['clients' => $clients]);
+        $totalClients = (clone $clientsQuery)->count();
+        $clientsWithEmail = (clone $clientsQuery)->whereNotNull('email')->where('email', '!=', '')->count();
+        $newThisMonth = (clone $clientsQuery)->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->count();
+
+        return view('clients.index', [
+            'clients' => $clients,
+            'stats' => [
+                'total_clients' => $totalClients,
+                'clients_with_email' => $clientsWithEmail,
+                'new_this_month' => $newThisMonth,
+            ],
+        ]);
     }
 
     public function store(Request $request): RedirectResponse|JsonResponse

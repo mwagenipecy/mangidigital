@@ -2,6 +2,10 @@
 
 @section('title', 'Clients')
 
+@php
+    $fmt = fn ($v) => number_format((float) $v, 0);
+@endphp
+
 @section('content')
 <div class="dash-page-header">
     <div>
@@ -21,6 +25,21 @@
         <p style="margin:0;font-size:.9rem;color:var(--dash-ink);">{{ session('success') }}</p>
     </div>
 @endif
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:16px;">
+    <div class="dash-card" style="margin-bottom:0;padding:18px;">
+        <div style="font-size:.72rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">Total clients</div>
+        <div style="font-size:1.5rem;font-weight:900;color:var(--dash-ink);margin-top:6px;">{{ $fmt($stats['total_clients']) }}</div>
+    </div>
+    <div class="dash-card" style="margin-bottom:0;padding:18px;">
+        <div style="font-size:.72rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">With email</div>
+        <div style="font-size:1.5rem;font-weight:900;color:#0369a1;margin-top:6px;">{{ $fmt($stats['clients_with_email']) }}</div>
+    </div>
+    <div class="dash-card" style="margin-bottom:0;padding:18px;">
+        <div style="font-size:.72rem;font-weight:700;color:var(--dash-muted);text-transform:uppercase;">New this month</div>
+        <div style="font-size:1.5rem;font-weight:900;color:#15803d;margin-top:6px;">{{ $fmt($stats['new_this_month']) }}</div>
+    </div>
+</div>
 
 <div class="dash-modal-overlay" id="addClientModal" role="dialog" aria-modal="true" aria-labelledby="addClientModalTitle" onclick="if(event.target===this) this.classList.remove('show')">
     <div class="dash-modal-dialog" onclick="event.stopPropagation()">
