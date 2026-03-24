@@ -2,11 +2,59 @@
 
 @section('title', 'Payments')
 
+@php
+    $fmt = fn ($v) => number_format((float) $v, 0);
+@endphp
+
 @section('content')
 <div class="dash-page-header">
     <div>
         <h1 class="dash-page-title">Client Payments</h1>
         <p class="dash-page-subtitle">Track plan targets, installment progress, reminders, and completion</p>
+    </div>
+    <button type="button" class="dash-btn dash-btn-brand" onclick="openCreatePlanModal()">Create Plan</button>
+</div>
+
+@if(session('error'))
+    <div class="dash-card" style="margin-bottom:16px;background:rgba(239,68,68,.08);border-color:var(--dash-danger);">
+        <p style="margin:0;font-size:.9rem;color:var(--dash-danger);">{{ session('error') }}</p>
+    </div>
+@endif
+@if(session('success'))
+    <div class="dash-card" style="margin-bottom:16px;background:var(--dash-brand-10);border-color:var(--dash-brand);">
+        <p style="margin:0;font-size:.9rem;color:var(--dash-ink);">{{ session('success') }}</p>
+    </div>
+@endif
+
+<div class="dash-kpi-grid dash-kpi-grid--three" style="margin-bottom:12px;">
+    <div class="dash-kpi-card" style="--kpi-color: var(--dash-brand); --kpi-bg: var(--dash-brand-10);">
+        <div class="dash-kpi-top">
+            <div class="dash-kpi-icon"><flux:icon.wallet class="size-5 text-[var(--dash-brand)]" /></div>
+        </div>
+        <div class="dash-kpi-value">TZS {{ $fmt($summary['total_to_be_paid']) }}</div>
+        <div class="dash-kpi-label">Total To Be Paid</div>
+    </div>
+    <div class="dash-kpi-card" style="--kpi-color: var(--dash-warn); --kpi-bg: rgba(245,158,11,.12);">
+        <div class="dash-kpi-top">
+            <div class="dash-kpi-icon"><flux:icon.check-circle class="size-5 text-[var(--dash-warn)]" /></div>
+        </div>
+        <div class="dash-kpi-value">TZS {{ $fmt($summary['total_paid']) }}</div>
+        <div class="dash-kpi-label">Total Paid</div>
+    </div>
+    <div class="dash-kpi-card" style="--kpi-color: var(--dash-ok); --kpi-bg: rgba(34,197,94,.12);">
+        <div class="dash-kpi-top">
+            <div class="dash-kpi-icon"><flux:icon.clock class="size-5 text-[var(--dash-ok)]" /></div>
+        </div>
+        <div class="dash-kpi-value">TZS {{ $fmt($summary['total_pending']) }}</div>
+        <div class="dash-kpi-label">Total Pending</div>
+    </div>
+</div>
+
+<div class="dash-card" style="margin-bottom:16px;padding:12px 16px;">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <span class="dash-pill dash-pill-blue">In Progress (&lt; 50%): {{ $metrics['active'] }}</span>
+        <span class="dash-pill dash-pill-yellow">50%+ Progress: {{ $metrics['over_half'] }}</span>
+        <span class="dash-pill dash-pill-green">Completed / Closed: {{ $metrics['completed'] }}</span>
     </div>
 </div>
 
@@ -49,85 +97,6 @@
                 <label for="date_to">Date To</label>
                 <input type="date" id="date_to" name="date_to" value="{{ $filters['date_to'] ?? '' }}">
             </div>
-        </div>
-    </form>
-</div>
-
-@if(session('error'))
-    <div class="dash-card" style="margin-bottom:16px;background:rgba(239,68,68,.08);border-color:var(--dash-danger);">
-        <p style="margin:0;font-size:.9rem;color:var(--dash-danger);">{{ session('error') }}</p>
-    </div>
-@endif
-@if(session('success'))
-    <div class="dash-card" style="margin-bottom:16px;background:var(--dash-brand-10);border-color:var(--dash-brand);">
-        <p style="margin:0;font-size:.9rem;color:var(--dash-ink);">{{ session('success') }}</p>
-    </div>
-@endif
-
-<div class="dash-kpi-grid dash-kpi-grid--three">
-    <div class="dash-kpi-card" style="--kpi-color: var(--dash-brand); --kpi-bg: var(--dash-brand-10);">
-        <div class="dash-kpi-top">
-            <div class="dash-kpi-icon"><flux:icon.clock class="size-5 text-[var(--dash-brand)]" /></div>
-        </div>
-        <div class="dash-kpi-value">{{ $metrics['active'] }}</div>
-        <div class="dash-kpi-label">In Progress (&lt; 50%)</div>
-    </div>
-    <div class="dash-kpi-card" style="--kpi-color: var(--dash-warn); --kpi-bg: rgba(245,158,11,.12);">
-        <div class="dash-kpi-top">
-            <div class="dash-kpi-icon"><flux:icon.bolt class="size-5 text-[var(--dash-warn)]" /></div>
-        </div>
-        <div class="dash-kpi-value">{{ $metrics['over_half'] }}</div>
-        <div class="dash-kpi-label">Progress 50%+</div>
-    </div>
-    <div class="dash-kpi-card" style="--kpi-color: var(--dash-ok); --kpi-bg: rgba(34,197,94,.12);">
-        <div class="dash-kpi-top">
-            <div class="dash-kpi-icon"><flux:icon.check-circle class="size-5 text-[var(--dash-ok)]" /></div>
-        </div>
-        <div class="dash-kpi-value">{{ $metrics['completed'] }}</div>
-        <div class="dash-kpi-label">Completed / Closed</div>
-    </div>
-</div>
-
-<div class="dash-card" style="margin-bottom:16px;">
-    <div class="dash-card-header">
-        <div>
-            <div class="dash-card-title">Create Client Plan</div>
-            <div class="dash-card-subtitle">Example: Plan target TZS 2,300,000 then collect installments</div>
-        </div>
-    </div>
-    <form action="{{ route('payments.plans.store') }}" method="POST" class="js-loading-form">
-        @csrf
-        <div class="dash-form-grid dash-form-grid--4">
-            <div class="dash-form-field">
-                <label for="client_id">Client *</label>
-                <select id="client_id" name="client_id" required>
-                    <option value="">Select client</option>
-                    @foreach($clients as $client)
-                        <option value="{{ $client->id }}" {{ old('client_id') == $client->id ? 'selected' : '' }}>
-                            {{ $client->name }} ({{ $client->phone }})
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="dash-form-field">
-                <label for="plan_name">Plan Name *</label>
-                <input type="text" id="plan_name" name="plan_name" value="{{ old('plan_name', 'Installment Plan') }}" required>
-            </div>
-            <div class="dash-form-field">
-                <label for="goal_amount">Target Amount (TZS) *</label>
-                <input type="number" id="goal_amount" name="goal_amount" min="1" step="1" value="{{ old('goal_amount') }}" required>
-            </div>
-            <div class="dash-form-field">
-                <label for="started_at">Start Date</label>
-                <input type="date" id="started_at" name="started_at" value="{{ old('started_at', now()->toDateString()) }}">
-            </div>
-        </div>
-        <div class="dash-form-field" style="margin-top:12px;">
-            <label for="plan_notes">Notes</label>
-            <textarea id="plan_notes" name="notes" rows="2">{{ old('notes') }}</textarea>
-        </div>
-        <div class="dash-form-actions">
-            <button type="submit" class="dash-btn dash-btn-brand js-loading-btn" data-loading-text="Creating plan...">Create Plan</button>
         </div>
     </form>
 </div>
@@ -226,6 +195,54 @@
     @endif
 </div>
 
+<div class="dash-modal-overlay" id="createPlanModal" role="dialog" aria-modal="true" aria-labelledby="createPlanModalTitle" onclick="if(event.target===this) this.classList.remove('show')">
+    <div class="dash-modal-dialog" onclick="event.stopPropagation()">
+        <div class="dash-modal-header">
+            <h2 class="dash-modal-title" id="createPlanModalTitle">Create Client Plan</h2>
+            <button type="button" class="dash-modal-close" onclick="closeCreatePlanModal()" aria-label="Close">&times;</button>
+        </div>
+        <div class="dash-modal-body">
+            <div class="dash-td-sub" style="margin-bottom:10px;">Example: Plan target TZS 2,300,000 then collect installments.</div>
+            <form action="{{ route('payments.plans.store') }}" method="POST" class="js-loading-form">
+                @csrf
+                <div class="dash-form-grid dash-form-grid--2">
+                    <div class="dash-form-field">
+                        <label for="create_plan_client_id">Client *</label>
+                        <select id="create_plan_client_id" name="client_id" required>
+                            <option value="">Select client</option>
+                            @foreach($clients as $client)
+                                <option value="{{ $client->id }}" {{ old('client_id') == $client->id ? 'selected' : '' }}>
+                                    {{ $client->name }} ({{ $client->phone }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="dash-form-field">
+                        <label for="create_plan_name">Plan Name *</label>
+                        <input type="text" id="create_plan_name" name="plan_name" value="{{ old('plan_name', 'Installment Plan') }}" required>
+                    </div>
+                    <div class="dash-form-field">
+                        <label for="create_plan_goal_amount">Target Amount (TZS) *</label>
+                        <input type="number" id="create_plan_goal_amount" name="goal_amount" min="1" step="1" value="{{ old('goal_amount') }}" required>
+                    </div>
+                    <div class="dash-form-field">
+                        <label for="create_plan_started_at">Start Date</label>
+                        <input type="date" id="create_plan_started_at" name="started_at" value="{{ old('started_at', now()->toDateString()) }}">
+                    </div>
+                </div>
+                <div class="dash-form-field" style="margin-top:12px;">
+                    <label for="create_plan_notes">Notes</label>
+                    <textarea id="create_plan_notes" name="notes" rows="2">{{ old('notes') }}</textarea>
+                </div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;">
+                    <button type="button" class="dash-btn dash-btn-outline" onclick="closeCreatePlanModal()">Cancel</button>
+                    <button type="submit" class="dash-btn dash-btn-brand js-loading-btn" data-loading-text="Creating plan...">Create Plan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <div class="dash-modal-overlay" id="installmentModal" role="dialog" aria-modal="true" aria-labelledby="installmentModalTitle" onclick="if(event.target===this) this.classList.remove('show')">
     <div class="dash-modal-dialog" onclick="event.stopPropagation()">
         <div class="dash-modal-header">
@@ -275,6 +292,14 @@
 
 @push('scripts')
 <script>
+function openCreatePlanModal() {
+    document.getElementById('createPlanModal').classList.add('show');
+}
+
+function closeCreatePlanModal() {
+    document.getElementById('createPlanModal').classList.remove('show');
+}
+
 function openInstallmentModal(planId, planName, clientName) {
     document.getElementById('installment_plan_id').value = planId;
     document.getElementById('installmentModalMeta').textContent = 'Client: ' + clientName + ' · Plan: ' + planName;
@@ -284,6 +309,12 @@ function openInstallmentModal(planId, planName, clientName) {
 function closeInstallmentModal() {
     document.getElementById('installmentModal').classList.remove('show');
 }
+
+@if($errors->has('client_id') || $errors->has('plan_name') || $errors->has('goal_amount') || $errors->has('started_at') || $errors->has('notes'))
+document.addEventListener('DOMContentLoaded', function () {
+    openCreatePlanModal();
+});
+@endif
 
 document.addEventListener('submit', function (event) {
     const form = event.target.closest('.js-loading-form');

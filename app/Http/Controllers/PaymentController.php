@@ -67,6 +67,7 @@ class PaymentController extends Controller
                 ->whereRaw($paidSubquery.' < (client_payment_plans.goal_amount * 0.5)');
         }
 
+        $summaryPlans = (clone $plansQuery)->get(['id', 'goal_amount', 'status']);
         $plans = $plansQuery->paginate(20)->withQueryString();
 
         $clients = $organization->clients()->orderBy('name')->get(['id', 'name', 'phone', 'email']);
@@ -95,10 +96,27 @@ class PaymentController extends Controller
             $metrics['active']++;
         }
 
+        $summary = [
+            'total_to_be_paid' => 0.0,
+            'total_paid' => 0.0,
+            'total_pending' => 0.0,
+        ];
+
+        foreach ($summaryPlans as $plan) {
+            $goal = (float) $plan->goal_amount;
+            $paid = (float) ($plan->installments_sum_amount ?? 0);
+            $pending = max(0, $goal - $paid);
+
+            $summary['total_to_be_paid'] += $goal;
+            $summary['total_paid'] += $paid;
+            $summary['total_pending'] += $pending;
+        }
+
         return view('payments.index', [
             'plans' => $plans,
             'clients' => $clients,
             'metrics' => $metrics,
+            'summary' => $summary,
             'filters' => [
                 'search' => $search,
                 'status' => $status,
