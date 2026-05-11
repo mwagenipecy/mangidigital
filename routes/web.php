@@ -44,6 +44,7 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('settings/business', [SettingsController::class, 'business'])->name('settings.business');
+    Route::put('settings/business', [SettingsController::class, 'updateBusiness'])->name('settings.business.update');
     Route::get('settings/billing', [SettingsController::class, 'billing'])->name('settings.billing');
     Route::get('settings/notifications', [SettingsController::class, 'notifications'])->name('settings.notifications');
 

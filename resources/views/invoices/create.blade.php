@@ -22,8 +22,41 @@
     </div>
 @endif
 
-<form action="{{ route('invoices.store') }}" method="POST">
+<form action="{{ route('invoices.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
+
+    <div class="dash-card dash-form-card">
+        <div class="dash-card-header">
+            <div>
+                <div class="dash-card-title">{{ __('Organization logo') }}</div>
+                <div class="dash-card-subtitle">{{ __('This will appear on the invoice PDF (background removed automatically)') }}</div>
+            </div>
+        </div>
+        <div class="dash-form-section">
+            @php
+                $logoFile = $organization?->logo_path ? public_path($organization->logo_path) : null;
+            @endphp
+            <div class="dash-form-grid dash-form-grid--2" style="max-width:100%;align-items:center;">
+                <div class="dash-form-field">
+                    <label for="organization_logo">{{ __('Upload logo (optional)') }}</label>
+                    <input type="file" id="organization_logo" name="organization_logo" accept="image/*">
+                    @error('organization_logo')
+                        <div style="margin-top:6px;color:var(--dash-danger);font-size:.85rem;">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="dash-form-field">
+                    <label>{{ __('Current logo') }}</label>
+                    @if($logoFile && file_exists($logoFile))
+                        <img src="/{{ $organization->logo_path }}" alt="Logo" style="width:72px;height:72px;border-radius:14px;border:1px solid var(--dash-border);object-fit:contain;background:transparent;">
+                    @else
+                        <div style="width:72px;height:72px;border-radius:14px;border:1px dashed var(--dash-border);display:flex;align-items:center;justify-content:center;color:var(--dash-muted);font-weight:700;">
+                            {{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::limit($organization->name ?? 'ORG', 2, '')) }}
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="dash-card dash-form-card">
         <div class="dash-card-header">

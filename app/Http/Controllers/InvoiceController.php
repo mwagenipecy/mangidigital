@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -101,6 +104,7 @@ class InvoiceController extends Controller
             'due_date' => ['nullable', 'date'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'issuer_name' => ['nullable', 'string', 'max:255'],
+            'organization_logo' => ['nullable', 'file', 'image', 'max:4096'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string', 'max:500'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.01'],
@@ -110,6 +114,19 @@ class InvoiceController extends Controller
             'items.*.quantity' => 'quantity',
             'items.*.unit_price' => 'unit price',
         ]);
+
+        if ($request->hasFile('organization_logo')) {
+            $file = $request->file('organization_logo');
+            $contents = file_get_contents($file->getRealPath());
+
+            $png = $this->removeNearWhiteBackgroundToPng($contents);
+            $filename = 'org-' . $organization->id . '-' . Str::random(10) . '.png';
+            $storagePath = 'org-logos/' . $filename;
+            Storage::disk('public')->put($storagePath, $png);
+
+            $organization->logo_path = 'storage/' . $storagePath;
+            $organization->save();
+        }
 
         $nextSeq = $organization->invoices()->count() + 1;
         $invoiceNumber = 'INV-' . str_pad((string) $nextSeq, 5, '0', STR_PAD_LEFT);
@@ -187,7 +204,7 @@ class InvoiceController extends Controller
         return back()->with('success', __('Invoice marked as unpaid.'));
     }
 
-    public function pdf(Invoice $invoice): Response|RedirectResponse
+    public function pdf(Request $request, Invoice $invoice): Response|RedirectResponse
     {
         $organization = auth()->user()->organization;
         if (! $organization || $invoice->organization_id !== $organization->id) {
@@ -195,14 +212,62 @@ class InvoiceController extends Controller
         }
         $invoice->load(['client', 'items', 'createdByUser']);
 
-        $html = view('invoices.pdf', [
+        $pdf = Pdf::loadView('invoices.pdf', [
             'invoice' => $invoice,
             'organization' => $organization,
-        ])->render();
-
-        return response($html, 200, [
-            'Content-Type' => 'text/html; charset=UTF-8',
-            'Content-Disposition' => 'inline; filename="invoice-' . $invoice->display_number . '.html"',
         ]);
+
+        $filename = 'invoice-' . $invoice->display_number . '.pdf';
+
+        if ($request->boolean('download')) {
+            return $pdf->download($filename);
+        }
+
+        return $pdf->stream($filename);
+    }
+
+    private function removeNearWhiteBackgroundToPng(string $imageBytes): string
+    {
+        $img = @imagecreatefromstring($imageBytes);
+        if (! $img) {
+            return $imageBytes;
+        }
+
+        $w = imagesx($img);
+        $h = imagesy($img);
+
+        $out = imagecreatetruecolor($w, $h);
+        imagealphablending($out, false);
+        imagesavealpha($out, true);
+        $transparent = imagecolorallocatealpha($out, 0, 0, 0, 127);
+        imagefill($out, 0, 0, $transparent);
+
+        $threshold = 242;
+
+        for ($y = 0; $y < $h; $y++) {
+            for ($x = 0; $x < $w; $x++) {
+                $rgba = imagecolorat($img, $x, $y);
+                $r = ($rgba >> 16) & 0xFF;
+                $g = ($rgba >> 8) & 0xFF;
+                $b = $rgba & 0xFF;
+
+                if ($r >= $threshold && $g >= $threshold && $b >= $threshold) {
+                    imagesetpixel($out, $x, $y, $transparent);
+                    continue;
+                }
+
+                $color = imagecolorallocatealpha($out, $r, $g, $b, 0);
+                imagesetpixel($out, $x, $y, $color);
+            }
+        }
+
+        ob_start();
+        imagepng($out);
+        $png = ob_get_clean();
+
+        imagedestroy($img);
+        imagedestroy($out);
+
+        return $png ?: $imageBytes;
     }
 }

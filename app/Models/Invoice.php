@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Invoice extends Model
 {
@@ -13,6 +14,7 @@ class Invoice extends Model
     public const STATUS_PAID = 'paid';
 
     protected $fillable = [
+        'public_id',
         'organization_id',
         'client_id',
         'invoice_number',
@@ -38,6 +40,20 @@ class Invoice extends Model
             'subtotal' => 'decimal:2',
             'total' => 'decimal:2',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $invoice) {
+            if (! $invoice->public_id) {
+                $invoice->public_id = (string) Str::uuid();
+            }
+        });
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'public_id';
     }
 
     public function organization(): BelongsTo
